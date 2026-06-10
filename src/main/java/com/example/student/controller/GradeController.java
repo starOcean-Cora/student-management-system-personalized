@@ -2,6 +2,7 @@ package com.example.student.controller;
 
 import com.example.student.entity.GradeInfo;
 import com.example.student.repository.CourseInfoRepository;
+import com.example.student.repository.ClassInfoRepository;
 import com.example.student.repository.StudentInfoRepository;
 import com.example.student.service.GradeService;
 import org.springframework.stereotype.Controller;
@@ -18,13 +19,16 @@ public class GradeController {
     private final GradeService gradeService;
     private final StudentInfoRepository studentInfoRepository;
     private final CourseInfoRepository courseInfoRepository;
+    private final ClassInfoRepository classInfoRepository;
 
     public GradeController(GradeService gradeService,
                            StudentInfoRepository studentInfoRepository,
-                           CourseInfoRepository courseInfoRepository) {
+                           CourseInfoRepository courseInfoRepository,
+                           ClassInfoRepository classInfoRepository) {
         this.gradeService = gradeService;
         this.studentInfoRepository = studentInfoRepository;
         this.courseInfoRepository = courseInfoRepository;
+        this.classInfoRepository = classInfoRepository;
     }
 
     @GetMapping
@@ -140,5 +144,24 @@ public class GradeController {
         }
         model.addAttribute("grades", gradeService.findByStudentId(studentId));
         return "grade/my";
+    }
+    @GetMapping("/statistics")
+    public String statistics(@RequestParam(required = false) Long courseId,
+                             @RequestParam(required = false) Long classId,
+                             @RequestParam(required = false) String examType,
+                             HttpSession session,
+                             Model model,
+                             RedirectAttributes redirectAttributes) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) {
+            redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
+            return "redirect:/";
+        }
+        model.addAttribute("courses", courseInfoRepository.findAll());
+        model.addAttribute("classes", classInfoRepository.findAll());
+        model.addAttribute("courseId", courseId);
+        model.addAttribute("classId", classId);
+        model.addAttribute("examType", examType);
+        model.addAttribute("stats", gradeService.getStatistics(courseId, classId, examType));
+        return "grade/statistics";
     }
 }

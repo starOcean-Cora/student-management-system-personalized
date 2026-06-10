@@ -7,6 +7,7 @@ import com.example.student.repository.CourseInfoRepository;
 import com.example.student.repository.GradeInfoRepository;
 import com.example.student.repository.StudentInfoRepository;
 import org.springframework.stereotype.Service;
+import java.util.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -70,5 +71,64 @@ public class GradeService {
                 grade.setCourseName(course.getCourseName());
             }
         }
+    }
+    public Map<String, Object> getStatistics(Long courseId, Long classId, String examType) {
+        List<GradeInfo> all = gradeRepository.findAll();
+        List<GradeInfo> filtered = new ArrayList<>();
+
+        for (GradeInfo g : all) {
+            if (courseId != null && !courseId.equals(g.getCourseId())) continue;
+            if (classId != null && !classId.equals(g.getClassId())) continue;
+            if (examType != null && !examType.isEmpty() && !examType.equals(g.getExamType())) continue;
+            filtered.add(g);
+        }
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("count", filtered.size());
+
+        if (filtered.isEmpty()) {
+            stats.put("avg", null);
+            stats.put("max", null);
+            stats.put("min", null);
+            stats.put("passRate", 0.0);
+            stats.put("range1", 0); // <60
+            stats.put("range2", 0); // 60-69
+            stats.put("range3", 0); // 70-79
+            stats.put("range4", 0); // 80-89
+            stats.put("range5", 0); // 90-100
+            stats.put("maxRange", 0);
+            return stats;
+        }
+
+        double sum = 0, max = Double.MIN_VALUE, min = Double.MAX_VALUE;
+        int passCount = 0;
+        int r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0;
+
+        for (GradeInfo g : filtered) {
+            double s = g.getScore();
+            sum += s;
+            if (s > max) max = s;
+            if (s < min) min = s;
+            if (s >= 60) passCount++;
+
+            if (s < 60) r1++;
+            else if (s < 70) r2++;
+            else if (s < 80) r3++;
+            else if (s < 90) r4++;
+            else r5++;
+        }
+
+        stats.put("avg", Math.round(sum / filtered.size() * 10.0) / 10.0);
+        stats.put("max", max);
+        stats.put("min", min);
+        stats.put("passRate", Math.round(passCount * 1000.0 / filtered.size()) / 10.0);
+        stats.put("range1", r1);
+        stats.put("range2", r2);
+        stats.put("range3", r3);
+        stats.put("range4", r4);
+        stats.put("range5", r5);
+        stats.put("maxRange", (int)Math.max(r1, Math.max(r2, Math.max(r3, Math.max(r4, r5)))));
+
+        return stats;
     }
 }
