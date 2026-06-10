@@ -55,4 +55,12 @@ public class UserService {
         userAccount.setCreateTime(LocalDateTime.now());
         userAccountRepository.save(userAccount);
     }
+    public boolean changePassword(Long userId, String oldPassword, String newPassword) {
+        UserAccount user = userAccountRepository.findById(userId).orElse(null);
+        if (user == null) return false;
+        if (!user.getPassword().equals(oldPassword)) return false;
+        user.setPassword(newPassword);
+        userAccountRepository.save(user);
+        return true;
+    }
 }

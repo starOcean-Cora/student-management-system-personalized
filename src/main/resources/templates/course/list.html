@@ -56,7 +56,7 @@
             <a href="/attendance">考勤管理</a>
             <a href="/leave">请假管理</a>
             <a href="/grade">成绩管理</a>
-            <a href="#">系统管理</a>
+            <a href="/system/password">系统管理</a>
         </th:block>
         <th:block th:if="${session.role == 'STUDENT'}">
             <a href="/student/profile">查看学生信息</a>
@@ -66,7 +66,7 @@
             <a href="/attendance/my">我的考勤</a>
             <a href="/leave/my">请假申请</a>
             <a href="/grade/my">我的成绩</a>
-            <a href="#">修改密码</a>
+            <a href="/system/password">修改密码</a>
         </th:block>
     </div>
     <div class="main">
