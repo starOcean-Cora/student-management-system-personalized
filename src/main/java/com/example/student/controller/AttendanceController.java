@@ -58,23 +58,26 @@ public class AttendanceController {
             return "redirect:/attendance";
         }
         Long id = formData.getId();
-        AttendanceInfo attendance;
         if (id != null) {
-            attendance = attendanceService.findById(id).orElse(null);
+            AttendanceInfo attendance = attendanceService.findById(id).orElse(null);
             if (attendance == null) {
                 redirectAttributes.addFlashAttribute("error", "考勤记录不存在");
                 return "redirect:/attendance";
             }
+            attendance.setAttendanceDate(formData.getAttendanceDate());
+            attendance.setStatus(formData.getStatus());
+            attendance.setRemark(formData.getRemark());
+            attendanceService.save(attendance);
         } else {
-            attendance = new AttendanceInfo();
+            AttendanceInfo attendance = new AttendanceInfo();
+            attendance.setStudentId(formData.getStudentId());
+            attendance.setCourseId(formData.getCourseId());
+            attendance.setAttendanceDate(formData.getAttendanceDate());
+            attendance.setStatus(formData.getStatus());
+            attendance.setRemark(formData.getRemark());
+            attendanceService.fillRedundantFields(attendance);
+            attendanceService.save(attendance);
         }
-        attendance.setStudentId(formData.getStudentId());
-        attendance.setCourseId(formData.getCourseId());
-        attendance.setAttendanceDate(formData.getAttendanceDate());
-        attendance.setStatus(formData.getStatus());
-        attendance.setRemark(formData.getRemark());
-        attendanceService.fillRedundantFields(attendance);
-        attendanceService.save(attendance);
         redirectAttributes.addFlashAttribute("message", "保存成功");
         return "redirect:/attendance";
     }
