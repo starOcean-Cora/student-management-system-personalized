@@ -11,9 +11,12 @@ import java.util.Optional;
 public class StudentService {
 
     private final StudentInfoRepository studentInfoRepository;
+    private final CourseSelectionService courseSelectionService;
 
-    public StudentService(StudentInfoRepository studentInfoRepository) {
+    public StudentService(StudentInfoRepository studentInfoRepository,
+                           CourseSelectionService courseSelectionService) {
         this.studentInfoRepository = studentInfoRepository;
+        this.courseSelectionService = courseSelectionService;
     }
 
     public List<StudentInfo> findAll() {
@@ -25,7 +28,12 @@ public class StudentService {
     }
 
     public StudentInfo save(StudentInfo studentInfo) {
-        return studentInfoRepository.save(studentInfo);
+        StudentInfo saved = studentInfoRepository.save(studentInfo);
+        // Sync class info to existing selection records using entity-level update
+        if (studentInfo.getId() != null && studentInfo.getClassId() != null) {
+            courseSelectionService.syncStudentClassInfo(studentInfo.getId());
+        }
+        return saved;
     }
 
     public void deleteById(Long id) {

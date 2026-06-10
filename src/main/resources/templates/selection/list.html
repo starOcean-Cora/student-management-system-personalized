@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>班级管理 - 学生管理系统</title>
+    <title>选课管理 - 学生管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; }
@@ -30,8 +30,8 @@
         .btn-success { background: #27ae60; color: #fff; }
         .btn-success:hover { background: #219a52; }
         .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
         .actions { display: flex; gap: 6px; }
@@ -42,37 +42,26 @@
     <h3>学生管理系统</h3>
     <div class="header-right">
         <span th:text="'欢迎，' + ${session.username}"></span>
-        <span class="tag" th:classappend="${session.role == 'ADMIN'} ? 'tag-admin'" th:text="${session.role == 'ADMIN'} ? '管理员' : '学生'"></span>
+        <span class="tag tag-admin">管理员</span>
         <a href="/logout" onclick="return confirm('确认退出登录？')">退出</a>
     </div>
 </div>
 <div class="container">
     <div class="sidebar">
-        <th:block th:if="${session.role == 'ADMIN'}">
-            <a href="/student">学生管理</a>
-            <a href="/class" class="active">班级管理</a>
-            <a href="/course">课程管理</a>
-            <a href="/selection">选课管理</a>
-            <a href="#">考勤管理</a>
-            <a href="#">请假管理</a>
-            <a href="#">成绩管理</a>
-            <a href="#">系统管理</a>
-        </th:block>
-        <th:block th:if="${session.role == 'STUDENT'}">
-            <a href="/student/profile">查看学生信息</a>
-            <a href="/class" class="active">浏览班级</a>
-            <a href="/course">浏览课程</a>
-            <a href="/selection/my">我的选课</a>
-            <a href="#">我的考勤</a>
-            <a href="#">请假申请</a>
-            <a href="#">我的成绩</a>
-            <a href="#">修改密码</a>
-        </th:block>
+        <a href="/student">学生管理</a>
+        <a href="/class">班级管理</a>
+        <a href="/course">课程管理</a>
+        <a href="/selection" class="active">选课管理</a>
+        <a href="#">考勤管理</a>
+        <a href="#">请假管理</a>
+        <a href="#">成绩管理</a>
+        <a href="#">系统管理</a>
     </div>
     <div class="main">
         <div class="topbar">
-            <h2 th:text="${session.role == 'ADMIN'} ? '班级管理' : '浏览班级'"></h2>
-            <a th:if="${session.role == 'ADMIN'}" href="/class/add" class="btn btn-success">新增班级</a>
+            <h2>选课管理</h2>
+            <a href="/selection/add" class="btn btn-success">新增选课</a>
+            <a href="/selection/repair" class="btn btn-primary" onclick="return confirm('确认补齐所有选课记录的班级信息？')">补齐班级</a>
         </div>
         <div th:if="${message}" class="message" th:text="${message}"></div>
         <div th:if="${error}" class="error" th:text="${error}"></div>
@@ -80,21 +69,21 @@
             <table>
                 <thead>
                 <tr>
-                    <th>ID</th><th>班级名称</th><th>年级</th><th>专业</th><th>班主任</th><th>备注</th>
-                    <th th:if="${session.role == 'ADMIN'}">操作</th>
+                    <th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>选课时间</th><th>状态</th><th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="c : ${classes}">
-                    <td th:text="${c.id}"></td>
-                    <td th:text="${c.className}"></td>
-                    <td th:text="${c.grade}"></td>
-                    <td th:text="${c.major}"></td>
-                    <td th:text="${c.teacherName}"></td>
-                    <td th:text="${c.remark}"></td>
-                    <td th:if="${session.role == 'ADMIN'}" class="actions">
-                        <a th:href="@{/class/edit/{id}(id=${c.id})}" class="btn btn-primary">编辑</a>
-                        <a th:href="@{/class/delete/{id}(id=${c.id})}" class="btn btn-danger" onclick="return confirm('确认删除该班级吗？')">删除</a>
+                <tr th:each="s : ${selections}">
+                    <td th:text="${s.id}"></td>
+                    <td th:text="${s.studentNo}"></td>
+                    <td th:text="${s.studentName}"></td>
+                    <td th:text="${s.className}"></td>
+                    <td th:text="${s.courseName}"></td>
+                    <td th:text="${s.selectTime}"></td>
+                    <td th:text="${s.status}"></td>
+                    <td class="actions">
+                        <a th:href="@{/selection/edit/{id}(id=${s.id})}" class="btn btn-primary">编辑</a>
+                        <a th:href="@{/selection/delete/{id}(id=${s.id})}" class="btn btn-danger" onclick="return confirm('确认删除此选课记录吗？')">删除</a>
                     </td>
                 </tr>
                 </tbody>

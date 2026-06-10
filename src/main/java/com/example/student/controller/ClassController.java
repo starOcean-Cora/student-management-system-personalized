@@ -36,13 +36,29 @@ public class ClassController {
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute ClassInfo classInfo,
+    public String save(@ModelAttribute ClassInfo formData,
                        HttpSession session,
                        RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("role"))) {
             redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
             return "redirect:/class";
         }
+        Long id = formData.getId();
+        ClassInfo classInfo;
+        if (id != null) {
+            classInfo = classService.findById(id).orElse(null);
+            if (classInfo == null) {
+                redirectAttributes.addFlashAttribute("error", "班级不存在");
+                return "redirect:/class";
+            }
+        } else {
+            classInfo = new ClassInfo();
+        }
+        classInfo.setClassName(formData.getClassName());
+        classInfo.setGrade(formData.getGrade());
+        classInfo.setMajor(formData.getMajor());
+        classInfo.setTeacherName(formData.getTeacherName());
+        classInfo.setRemark(formData.getRemark());
         classService.save(classInfo);
         redirectAttributes.addFlashAttribute("message", "保存成功");
         return "redirect:/class";

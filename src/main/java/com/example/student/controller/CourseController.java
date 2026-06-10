@@ -36,21 +36,37 @@ public class CourseController {
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute CourseInfo courseInfo,
+    public String save(@ModelAttribute CourseInfo formData,
                        HttpSession session,
                        RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("role"))) {
             redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
             return "redirect:/course";
         }
-        Long id = courseInfo.getId();
+        Long id = formData.getId();
         boolean isEdit = (id != null);
         Long excludeId = isEdit ? id : 0L;
-        if (courseService.isCourseCodeDuplicate(courseInfo.getCourseCode(), excludeId)) {
+        if (courseService.isCourseCodeDuplicate(formData.getCourseCode(), excludeId)) {
             redirectAttributes.addFlashAttribute("error", "课程编号已存在");
-            return "redirect:/course/form";
+            return isEdit ? "redirect:/course/edit/" + id : "redirect:/course/add";
         }
-        courseService.save(courseInfo);
+        CourseInfo course;
+        if (isEdit) {
+            course = courseService.findById(id).orElse(null);
+            if (course == null) {
+                redirectAttributes.addFlashAttribute("error", "课程不存在");
+                return "redirect:/course";
+            }
+        } else {
+            course = new CourseInfo();
+        }
+        course.setCourseCode(formData.getCourseCode());
+        course.setCourseName(formData.getCourseName());
+        course.setTeacherName(formData.getTeacherName());
+        course.setCredit(formData.getCredit());
+        course.setClassHours(formData.getClassHours());
+        course.setRemark(formData.getRemark());
+        courseService.save(course);
         redirectAttributes.addFlashAttribute("message", "保存成功");
         return "redirect:/course";
     }

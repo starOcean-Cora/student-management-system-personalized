@@ -1,6 +1,8 @@
 package com.example.student.entity;
 
 import javax.persistence.*;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,6 +33,17 @@ public class ClassInfo {
 
     @Column(name = "update_time")
     private LocalDateTime updateTime;
+
+        @PrePersist
+    protected void onCreate() {
+        createTime = LocalDateTime.now();
+        updateTime = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updateTime = LocalDateTime.now();
+    }
 
     public ClassInfo() {}
 

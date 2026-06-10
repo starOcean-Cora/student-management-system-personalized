@@ -39,22 +39,41 @@ public class StudentController {
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute StudentInfo studentInfo,
+    public String save(@ModelAttribute StudentInfo formData,
                        HttpSession session,
                        RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("role"))) {
             redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
             return "redirect:/student";
         }
-        Long id = studentInfo.getId();
+        Long id = formData.getId();
         boolean isEdit = (id != null);
         Long excludeId = isEdit ? id : 0L;
-        if (studentService.isStudentNoDuplicate(studentInfo.getStudentNo(), excludeId)) {
+        if (studentService.isStudentNoDuplicate(formData.getStudentNo(), excludeId)) {
             redirectAttributes.addFlashAttribute("error", "学号已存在");
-            redirectAttributes.addFlashAttribute("studentInfo", studentInfo);
+            redirectAttributes.addFlashAttribute("studentInfo", formData);
             return isEdit ? "redirect:/student/edit/" + id : "redirect:/student/add";
         }
-        studentService.save(studentInfo);
+        StudentInfo student;
+        if (isEdit) {
+            student = studentService.findById(id).orElse(null);
+            if (student == null) {
+                redirectAttributes.addFlashAttribute("error", "学生不存在");
+                return "redirect:/student";
+            }
+        } else {
+            student = new StudentInfo();
+        }
+        student.setStudentNo(formData.getStudentNo());
+        student.setName(formData.getName());
+        student.setGender(formData.getGender());
+        student.setClassId(formData.getClassId());
+        student.setClassName(formData.getClassName());
+        student.setPhone(formData.getPhone());
+        student.setEmail(formData.getEmail());
+        student.setAvatar(formData.getAvatar());
+        student.setStatus(formData.getStatus());
+        studentService.save(student);
         redirectAttributes.addFlashAttribute("message", "保存成功");
         return "redirect:/student";
     }

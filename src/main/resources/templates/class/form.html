@@ -30,6 +30,7 @@
     <h3>学生管理系统</h3>
     <div class="header-right">
         <span th:text="'欢迎，' + ${session.username}"></span>
+        <a href="/class" style="color:#ecf0f1;text-decoration:none;padding:5px 10px;">返回</a>
         <a href="/logout" onclick="return confirm('确认退出登录？')">退出</a>
     </div>
 </div>
@@ -37,7 +38,7 @@
     <div class="form-card">
         <h2 th:text="${classInfo} != null ? '编辑班级' : '新增班级'">新增班级</h2>
         <form th:action="@{/class/save}" method="post">
-            <input type="hidden" name="id" th:value="${classInfo} != null ? ${classInfo.id} : ''" />
+            <input type="hidden" name="id" th:if="${classInfo} != null" th:value="${classInfo.id}" />
             <div class="form-group">
                 <label>班级名称 <span style="color:red">*</span></label>
                 <input type="text" name="className" required th:value="${classInfo} != null ? ${classInfo.className} : ''" />
