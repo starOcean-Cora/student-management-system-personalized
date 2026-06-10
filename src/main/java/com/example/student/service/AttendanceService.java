@@ -1,0 +1,66 @@
+package com.example.student.service;
+
+import com.example.student.entity.AttendanceInfo;
+import com.example.student.entity.CourseInfo;
+import com.example.student.entity.StudentInfo;
+import com.example.student.repository.AttendanceInfoRepository;
+import com.example.student.repository.CourseInfoRepository;
+import com.example.student.repository.StudentInfoRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class AttendanceService {
+
+    private final AttendanceInfoRepository attendanceRepository;
+    private final StudentInfoRepository studentInfoRepository;
+    private final CourseInfoRepository courseInfoRepository;
+
+    public AttendanceService(AttendanceInfoRepository attendanceRepository,
+                             StudentInfoRepository studentInfoRepository,
+                             CourseInfoRepository courseInfoRepository) {
+        this.attendanceRepository = attendanceRepository;
+        this.studentInfoRepository = studentInfoRepository;
+        this.courseInfoRepository = courseInfoRepository;
+    }
+
+    public List<AttendanceInfo> findAll() {
+        return attendanceRepository.findAll();
+    }
+
+    public Optional<AttendanceInfo> findById(Long id) {
+        return attendanceRepository.findById(id);
+    }
+
+    public List<AttendanceInfo> findByStudentId(Long studentId) {
+        return attendanceRepository.findByStudentIdOrderByAttendanceDateDesc(studentId);
+    }
+
+    public AttendanceInfo save(AttendanceInfo attendance) {
+        return attendanceRepository.save(attendance);
+    }
+
+    public void deleteById(Long id) {
+        attendanceRepository.deleteById(id);
+    }
+
+    public void fillRedundantFields(AttendanceInfo attendance) {
+        if (attendance.getStudentId() != null) {
+            StudentInfo student = studentInfoRepository.findById(attendance.getStudentId()).orElse(null);
+            if (student != null) {
+                attendance.setStudentNo(student.getStudentNo());
+                attendance.setStudentName(student.getName());
+                attendance.setClassId(student.getClassId());
+                attendance.setClassName(student.getClassName());
+            }
+        }
+        if (attendance.getCourseId() != null) {
+            CourseInfo course = courseInfoRepository.findById(attendance.getCourseId()).orElse(null);
+            if (course != null) {
+                attendance.setCourseName(course.getCourseName());
+            }
+        }
+    }
+}

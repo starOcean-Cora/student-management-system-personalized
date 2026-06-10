@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>学生管理 - 学生管理系统</title>
+    <title>考勤管理 - 学生管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; }
@@ -30,7 +30,7 @@
         .btn-success { background: #27ae60; color: #fff; }
         .btn-success:hover { background: #219a52; }
         .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
@@ -48,19 +48,19 @@
 </div>
 <div class="container">
     <div class="sidebar">
-        <a href="/student" class="active">学生管理</a>
+        <a href="/student">学生管理</a>
         <a href="/class">班级管理</a>
         <a href="/course">课程管理</a>
         <a href="/selection">选课管理</a>
-        <a href="/attendance">考勤管理</a>
+        <a href="/attendance" class="active">考勤管理</a>
         <a href="#">请假管理</a>
         <a href="#">成绩管理</a>
         <a href="#">系统管理</a>
     </div>
     <div class="main">
         <div class="topbar">
-            <h2>学生管理</h2>
-            <a href="/student/add" class="btn btn-success">新增学生</a>
+            <h2>考勤管理</h2>
+            <a href="/attendance/add" class="btn btn-success">新增考勤</a>
         </div>
         <div th:if="${message}" class="message" th:text="${message}"></div>
         <div th:if="${error}" class="error" th:text="${error}"></div>
@@ -68,23 +68,22 @@
             <table>
                 <thead>
                 <tr>
-                    <th>ID</th><th>学号</th><th>姓名</th><th>性别</th><th>班级</th><th>手机号</th><th>邮箱</th><th>头像</th><th>状态</th><th>操作</th>
+                    <th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>考勤日期</th><th>状态</th><th>备注</th><th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="s : ${students}">
-                    <td th:text="${s.id}"></td>
-                    <td th:text="${s.studentNo}"></td>
-                    <td th:text="${s.name}"></td>
-                    <td th:text="${s.gender} == 1 ? '男' : (${s.gender} == 0 ? '女' : '')"></td>
-                    <td th:text="${s.className}"></td>
-                    <td th:text="${s.phone}"></td>
-                    <td th:text="${s.email}"></td>
-                    <td th:text="${s.avatar}"></td>
-                    <td th:text="${s.status} == 1 ? '在读' : '离校'"></td>
+                <tr th:each="a : ${attendances}">
+                    <td th:text="${a.id}"></td>
+                    <td th:text="${a.studentNo}"></td>
+                    <td th:text="${a.studentName}"></td>
+                    <td th:text="${a.className}"></td>
+                    <td th:text="${a.courseName}"></td>
+                    <td th:text="${a.attendanceDate}"></td>
+                    <td th:text="${a.status}"></td>
+                    <td th:text="${a.remark}"></td>
                     <td class="actions">
-                        <a th:href="@{/student/edit/{id}(id=${s.id})}" class="btn btn-primary">编辑</a>
-                        <a th:href="@{/student/delete/{id}(id=${s.id})}" class="btn btn-danger" onclick="return confirm('确认删除该学生吗？')">删除</a>
+                        <a th:href="@{/attendance/edit/{id}(id=${a.id})}" class="btn btn-primary">编辑</a>
+                        <a th:href="@{/attendance/delete/{id}(id=${a.id})}" class="btn btn-danger" onclick="return confirm('确认删除该考勤记录吗？')">删除</a>
                     </td>
                 </tr>
                 </tbody>
