@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>审批请假 - 学生管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; }
+        .header { background: #2c3e50; color: #fff; padding: 0 30px; height: 56px; display: flex; justify-content: space-between; align-items: center; }
+        .header h3 { font-size: 18px; font-weight: 500; }
+        .header-right { display: flex; align-items: center; gap: 15px; font-size: 14px; }
+        .header-right a { color: #ecf0f1; text-decoration: none; }
+        .main { max-width: 550px; margin: 40px auto; padding: 0 20px; }
+        .form-card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .form-card h2 { margin-bottom: 20px; color: #2c3e50; font-size: 20px; }
+        .info-row { display: flex; margin-bottom: 10px; font-size: 14px; }
+        .info-label { color: #888; width: 80px; flex-shrink: 0; }
+        .info-value { color: #333; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: inherit; }
+        .form-group textarea { resize: vertical; }
+        .btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-success { background: #27ae60; color: #fff; }
+        .btn-success:hover { background: #219a52; }
+        .btn-default { background: #95a5a6; color: #fff; }
+        .btn-default:hover { background: #7f8c8d; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h3>学生管理系统</h3>
+    <div class="header-right">
+        <span th:text="'欢迎，' + ${session.username}"></span>
+        <a href="/leave" style="color:#ecf0f1;text-decoration:none;padding:5px 10px;">返回</a>
+        <a href="/logout" onclick="return confirm('确认退出登录？')">退出</a>
+    </div>
+</div>
+<div class="main">
+    <div class="form-card">
+        <h2>审批请假</h2>
+        <div class="info-row"><span class="info-label">学生：</span><span class="info-value" th:text="${leaveInfo.studentNo} + ' - ' + ${leaveInfo.studentName}"></span></div>
+        <div class="info-row"><span class="info-label">班级：</span><span class="info-value" th:text="${leaveInfo.className}"></span></div>
+        <div class="info-row"><span class="info-label">类型：</span><span class="info-value" th:text="${leaveInfo.leaveType}"></span></div>
+        <div class="info-row"><span class="info-label">原因：</span><span class="info-value" th:text="${leaveInfo.reason}"></span></div>
+        <div class="info-row"><span class="info-label">时间段：</span><span class="info-value" th:text="${leaveInfo.startTime} + ' ~ ' + ${leaveInfo.endTime}"></span></div>
+        <hr style="margin:15px 0;border-color:#eee;" />
+        <form th:action="@{/leave/approve}" method="post">
+            <input type="hidden" name="id" th:value="${leaveInfo.id}" />
+            <div class="form-group">
+                <label>审批结果 <span style="color:red">*</span></label>
+                <select name="status" required>
+                    <option value="">请选择</option>
+                    <option value="已通过">已通过</option>
+                    <option value="已驳回">已驳回</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>审批备注</label>
+                <textarea name="approveRemark" rows="3" placeholder="填写审批意见（可选）"></textarea>
+            </div>
+            <div class="btns">
+                <button type="submit" class="btn btn-success">提交审批</button>
+                <a href="/leave" class="btn btn-default">返回</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

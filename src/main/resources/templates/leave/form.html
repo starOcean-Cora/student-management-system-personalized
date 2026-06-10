@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${leaveInfo} != null ? '编辑请假' : '新增请假'">请假表单</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; }
+        .header { background: #2c3e50; color: #fff; padding: 0 30px; height: 56px; display: flex; justify-content: space-between; align-items: center; }
+        .header h3 { font-size: 18px; font-weight: 500; }
+        .header-right { display: flex; align-items: center; gap: 15px; font-size: 14px; }
+        .header-right a { color: #ecf0f1; text-decoration: none; }
+        .main { max-width: 550px; margin: 40px auto; padding: 0 20px; }
+        .form-card { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .form-card h2 { margin-bottom: 20px; color: #2c3e50; font-size: 20px; }
+        .error { background: #f8d7da; color: #721c24; padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
+        .form-group select, .form-group input, .form-group textarea { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: inherit; }
+        .form-group select:focus, .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #3498db; }
+        .form-group .readonly-text { padding: 9px 0; color: #333; font-size: 14px; }
+        .btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3498db; color: #fff; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-default { background: #95a5a6; color: #fff; }
+        .btn-default:hover { background: #7f8c8d; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h3>学生管理系统</h3>
+    <div class="header-right">
+        <span th:text="'欢迎，' + ${session.username}"></span>
+        <a href="/leave" style="color:#ecf0f1;text-decoration:none;padding:5px 10px;">返回</a>
+        <a href="/logout" onclick="return confirm('确认退出登录？')">退出</a>
+    </div>
+</div>
+<div class="main">
+    <div class="form-card">
+        <h2 th:text="${leaveInfo} != null ? '编辑请假' : '新增请假'">新增请假</h2>
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+        <form th:action="@{/leave/save}" method="post">
+            <input type="hidden" name="id" th:if="${leaveInfo} != null" th:value="${leaveInfo.id}" />
+            <div class="form-group">
+                <label>学生 <span style="color:red">*</span></label>
+                <select name="studentId" required th:if="${leaveInfo} == null">
+                    <option value="">请选择学生</option>
+                    <option th:each="s : ${students}" th:value="${s.id}" th:text="${s.studentNo} + ' - ' + ${s.name}"></option>
+                </select>
+                <p th:if="${leaveInfo} != null" class="readonly-text" th:text="${leaveInfo.studentNo} + ' - ' + ${leaveInfo.studentName}"></p>
+            </div>
+            <div class="form-group">
+                <label>请假类型 <span style="color:red">*</span></label>
+                <select name="leaveType" required>
+                    <option value="">请选择</option>
+                    <option value="事假" th:selected="${leaveInfo} == null or ${leaveInfo.leaveType} == '事假'">事假</option>
+                    <option value="病假" th:selected="${leaveInfo} != null and ${leaveInfo.leaveType} == '病假'">病假</option>
+                    <option value="其他" th:selected="${leaveInfo} != null and ${leaveInfo.leaveType} == '其他'">其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>请假原因 <span style="color:red">*</span></label>
+                <textarea name="reason" rows="3" required th:text="${leaveInfo} != null ? ${leaveInfo.reason} : ''"></textarea>
+            </div>
+            <div class="form-group">
+                <label>开始时间 <span style="color:red">*</span></label>
+                <input type="datetime-local" name="startTime" required
+                       th:value="${leaveInfo} != null ? ${#temporals.format(leaveInfo.startTime, 'yyyy-MM-dd''T''HH:mm')} : ''" />
+            </div>
+            <div class="form-group">
+                <label>结束时间 <span style="color:red">*</span></label>
+                <input type="datetime-local" name="endTime" required
+                       th:value="${leaveInfo} != null ? ${#temporals.format(leaveInfo.endTime, 'yyyy-MM-dd''T''HH:mm')} : ''" />
+            </div>
+            <div class="form-group" th:if="${leaveInfo} != null">
+                <label>状态</label>
+                <select name="status">
+                    <option value="待审批" th:selected="${leaveInfo.status} == '待审批'">待审批</option>
+                    <option value="已通过" th:selected="${leaveInfo.status} == '已通过'">已通过</option>
+                    <option value="已驳回" th:selected="${leaveInfo.status} == '已驳回'">已驳回</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <textarea name="remark" rows="2" th:text="${leaveInfo} != null ? ${leaveInfo.remark} : ''"></textarea>
+            </div>
+            <div class="btns">
+                <button type="submit" class="btn btn-primary" th:text="${leaveInfo} != null ? '更新' : '保存'">保存</button>
+                <a href="/leave" class="btn btn-default">返回</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

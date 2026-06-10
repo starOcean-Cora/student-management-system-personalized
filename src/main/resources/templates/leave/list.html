@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>考勤管理 - 学生管理系统</title>
+    <title>请假管理 - 学生管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; }
@@ -29,12 +29,17 @@
         .btn-danger:hover { background: #c0392b; }
         .btn-success { background: #27ae60; color: #fff; }
         .btn-success:hover { background: #219a52; }
+        .btn-warning { background: #f39c12; color: #fff; }
+        .btn-warning:hover { background: #d68910; }
         .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
         .actions { display: flex; gap: 6px; }
+        .status-pending { color: #f39c12; font-weight: 600; }
+        .status-approved { color: #27ae60; font-weight: 600; }
+        .status-rejected { color: #e74c3c; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -52,15 +57,15 @@
         <a href="/class">班级管理</a>
         <a href="/course">课程管理</a>
         <a href="/selection">选课管理</a>
-        <a href="/attendance" class="active">考勤管理</a>
-        <a href="/leave">请假管理</a>
+        <a href="/attendance">考勤管理</a>
+        <a href="/leave" class="active">请假管理</a>
         <a href="#">成绩管理</a>
         <a href="#">系统管理</a>
     </div>
     <div class="main">
         <div class="topbar">
-            <h2>考勤管理</h2>
-            <a href="/attendance/add" class="btn btn-success">新增考勤</a>
+            <h2>请假管理</h2>
+            <a href="/leave/add" class="btn btn-success">新增请假</a>
         </div>
         <div th:if="${message}" class="message" th:text="${message}"></div>
         <div th:if="${error}" class="error" th:text="${error}"></div>
@@ -68,22 +73,29 @@
             <table>
                 <thead>
                 <tr>
-                    <th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>考勤日期</th><th>状态</th><th>备注</th><th>操作</th>
+                    <th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>类型</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>审批人</th><th>审批时间</th><th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="a : ${attendances}">
-                    <td th:text="${a.id}"></td>
-                    <td th:text="${a.studentNo}"></td>
-                    <td th:text="${a.studentName}"></td>
-                    <td th:text="${a.className}"></td>
-                    <td th:text="${a.courseName}"></td>
-                    <td th:text="${a.attendanceDate}"></td>
-                    <td th:text="${a.status}"></td>
-                    <td th:text="${a.remark}"></td>
+                <tr th:each="l : ${leaves}">
+                    <td th:text="${l.id}"></td>
+                    <td th:text="${l.studentNo}"></td>
+                    <td th:text="${l.studentName}"></td>
+                    <td th:text="${l.className}"></td>
+                    <td th:text="${l.leaveType}"></td>
+                    <td th:text="${l.startTime}"></td>
+                    <td th:text="${l.endTime}"></td>
+                    <td>
+                        <span th:if="${l.status == '待审批'}" class="status-pending" th:text="${l.status}"></span>
+                        <span th:if="${l.status == '已通过'}" class="status-approved" th:text="${l.status}"></span>
+                        <span th:if="${l.status == '已驳回'}" class="status-rejected" th:text="${l.status}"></span>
+                    </td>
+                    <td th:text="${l.approverId}"></td>
+                    <td th:text="${l.approveTime}"></td>
                     <td class="actions">
-                        <a th:href="@{/attendance/edit/{id}(id=${a.id})}" class="btn btn-primary">编辑</a>
-                        <a th:href="@{/attendance/delete/{id}(id=${a.id})}" class="btn btn-danger" onclick="return confirm('确认删除该考勤记录吗？')">删除</a>
+                        <a th:if="${l.status == '待审批'}" th:href="@{/leave/approve/{id}(id=${l.id})}" class="btn btn-warning">审批</a>
+                        <a th:href="@{/leave/edit/{id}(id=${l.id})}" class="btn btn-primary">编辑</a>
+                        <a th:href="@{/leave/delete/{id}(id=${l.id})}" class="btn btn-danger" onclick="return confirm('确认删除该请假记录吗？')">删除</a>
                     </td>
                 </tr>
                 </tbody>

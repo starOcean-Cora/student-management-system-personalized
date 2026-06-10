@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>考勤管理 - 学生管理系统</title>
+    <title>我的请假 - 学生管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; }
@@ -12,7 +12,6 @@
         .header-right a { color: #ecf0f1; text-decoration: none; }
         .header-right a:hover { text-decoration: underline; }
         .tag { background: #3498db; padding: 2px 8px; border-radius: 3px; font-size: 12px; }
-        .tag-admin { background: #e74c3c; }
         .container { display: flex; min-height: calc(100vh - 56px); }
         .sidebar { width: 200px; flex-shrink: 0; background: #fff; padding-top: 10px; box-shadow: 2px 0 6px rgba(0,0,0,0.05); }
         .sidebar a { display: block; padding: 12px 25px; color: #555; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; white-space: nowrap; }
@@ -23,18 +22,16 @@
         .message { background: #d4edda; color: #155724; padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
         .error { background: #f8d7da; color: #721c24; padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
         .btn { padding: 7px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
-        .btn-primary { background: #3498db; color: #fff; }
-        .btn-primary:hover { background: #2980b9; }
-        .btn-danger { background: #e74c3c; color: #fff; }
-        .btn-danger:hover { background: #c0392b; }
         .btn-success { background: #27ae60; color: #fff; }
         .btn-success:hover { background: #219a52; }
         .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
-        .actions { display: flex; gap: 6px; }
+        .status-pending { color: #f39c12; font-weight: 600; }
+        .status-approved { color: #27ae60; font-weight: 600; }
+        .status-rejected { color: #e74c3c; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -42,25 +39,25 @@
     <h3>学生管理系统</h3>
     <div class="header-right">
         <span th:text="'欢迎，' + ${session.username}"></span>
-        <span class="tag tag-admin">管理员</span>
+        <span class="tag">学生</span>
         <a href="/logout" onclick="return confirm('确认退出登录？')">退出</a>
     </div>
 </div>
 <div class="container">
     <div class="sidebar">
-        <a href="/student">学生管理</a>
-        <a href="/class">班级管理</a>
-        <a href="/course">课程管理</a>
-        <a href="/selection">选课管理</a>
-        <a href="/attendance" class="active">考勤管理</a>
-        <a href="/leave">请假管理</a>
-        <a href="#">成绩管理</a>
-        <a href="#">系统管理</a>
+        <a href="/student/profile">查看学生信息</a>
+        <a href="/class">浏览班级</a>
+        <a href="/course">浏览课程</a>
+        <a href="/selection/my">我的选课</a>
+        <a href="/attendance/my">我的考勤</a>
+        <a href="/leave/my" class="active">请假申请</a>
+        <a href="#">我的成绩</a>
+        <a href="#">修改密码</a>
     </div>
     <div class="main">
         <div class="topbar">
-            <h2>考勤管理</h2>
-            <a href="/attendance/add" class="btn btn-success">新增考勤</a>
+            <h2>我的请假</h2>
+            <a href="/leave/apply" class="btn btn-success">提交请假申请</a>
         </div>
         <div th:if="${message}" class="message" th:text="${message}"></div>
         <div th:if="${error}" class="error" th:text="${error}"></div>
@@ -68,23 +65,24 @@
             <table>
                 <thead>
                 <tr>
-                    <th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>考勤日期</th><th>状态</th><th>备注</th><th>操作</th>
+                    <th>请假类型</th><th>开始时间</th><th>结束时间</th><th>原因</th><th>状态</th><th>审批备注</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="a : ${attendances}">
-                    <td th:text="${a.id}"></td>
-                    <td th:text="${a.studentNo}"></td>
-                    <td th:text="${a.studentName}"></td>
-                    <td th:text="${a.className}"></td>
-                    <td th:text="${a.courseName}"></td>
-                    <td th:text="${a.attendanceDate}"></td>
-                    <td th:text="${a.status}"></td>
-                    <td th:text="${a.remark}"></td>
-                    <td class="actions">
-                        <a th:href="@{/attendance/edit/{id}(id=${a.id})}" class="btn btn-primary">编辑</a>
-                        <a th:href="@{/attendance/delete/{id}(id=${a.id})}" class="btn btn-danger" onclick="return confirm('确认删除该考勤记录吗？')">删除</a>
+                <tr th:if="${leaves.empty}">
+                    <td colspan="6" style="text-align:center;color:#999;padding:20px;">暂无请假记录</td>
+                </tr>
+                <tr th:each="l : ${leaves}">
+                    <td th:text="${l.leaveType}"></td>
+                    <td th:text="${l.startTime}"></td>
+                    <td th:text="${l.endTime}"></td>
+                    <td th:text="${l.reason}"></td>
+                    <td>
+                        <span th:if="${l.status == '待审批'}" class="status-pending" th:text="${l.status}"></span>
+                        <span th:if="${l.status == '已通过'}" class="status-approved" th:text="${l.status}"></span>
+                        <span th:if="${l.status == '已驳回'}" class="status-rejected" th:text="${l.status}"></span>
                     </td>
+                    <td th:text="${l.approveRemark}"></td>
                 </tr>
                 </tbody>
             </table>
