@@ -5,26 +5,149 @@
     <title>登录 - 学生管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .login-box { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); width: 400px; }
-        h2 { text-align: center; margin-bottom: 30px; color: #2c3e50; }
-        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
-        .message { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #555; font-size: 14px; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-        .form-group input:focus { outline: none; border-color: #3498db; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        .btn-primary { background: #3498db; color: #fff; }
-        .btn-primary:hover { background: #2980b9; }
-        .links { text-align: center; margin-top: 15px; font-size: 14px; }
-        .links a { color: #3498db; text-decoration: none; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: #2c3e50;
+        }
+
+        /* 全屏背景图 */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url('/images/login-bg.jpg') center/cover no-repeat;
+            filter: brightness(0.55) blur(1px);
+            z-index: 0;
+        }
+
+        /* 右侧半透明遮罩区域 */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.35);
+            z-index: 0;
+        }
+
+        .login-box {
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.90);
+            backdrop-filter: blur(10px);
+            padding: 44px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            width: 400px;
+            margin-left: 180px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 28px;
+            color: #7f8c8d;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .error {
+            background: rgba(231,76,60,0.12);
+            color: #c0392b;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            border-left: 3px solid #e74c3c;
+        }
+
+        .message {
+            background: rgba(39,174,96,0.12);
+            color: #219a52;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            border-left: 3px solid #27ae60;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #444;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.7);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
+            background: #fff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 500;
+            letter-spacing: 2px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #777;
+        }
+        .links a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
         .links a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 <div class="login-box">
     <h2>学生管理系统</h2>
+    <div class="subtitle">校园信息管理平台</div>
     <div th:if="${error}" class="error" th:text="${error}"></div>
     <div th:if="${message}" class="message" th:text="${message}"></div>
     <form th:action="@{/login}" method="post">

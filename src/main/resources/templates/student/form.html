@@ -40,7 +40,7 @@
         <h2 th:text="${studentInfo} != null ? '编辑学生' : '新增学生'">新增学生</h2>
         <div th:if="${error}" class="error" th:text="${error}"></div>
         <form th:action="@{/student/save}" method="post">
-            <input type="hidden" name="id" th:if="${studentInfo} != null" th:value="${studentInfo.id}" />
+            <input type="hidden" name="id" th:if="${studentInfo} != null and ${studentInfo.id} != null" th:value="${studentInfo.id}" />
             <div class="form-group">
                 <label>学号 <span style="color:red">*</span></label>
                 <input type="text" name="studentNo" required th:value="${studentInfo} != null ? ${studentInfo.studentNo} : ''" />

@@ -47,13 +47,8 @@ public class StudentController {
             return "redirect:/student";
         }
         Long id = formData.getId();
-        boolean isEdit = (id != null);
-        Long excludeId = isEdit ? id : 0L;
-        if (studentService.isStudentNoDuplicate(formData.getStudentNo(), excludeId)) {
-            redirectAttributes.addFlashAttribute("error", "学号已存在");
-            redirectAttributes.addFlashAttribute("studentInfo", formData);
-            return isEdit ? "redirect:/student/edit/" + id : "redirect:/student/add";
-        }
+        boolean isEdit = (id != null && id > 0);
+        // Load original record for edits before duplicate check
         StudentInfo student;
         if (isEdit) {
             student = studentService.findById(id).orElse(null);
@@ -61,7 +56,20 @@ public class StudentController {
                 redirectAttributes.addFlashAttribute("error", "学生不存在");
                 return "redirect:/student";
             }
+            // Only check duplicate if studentNo actually changed
+            if (!student.getStudentNo().equals(formData.getStudentNo())) {
+                if (studentService.isStudentNoDuplicate(formData.getStudentNo(), student.getId())) {
+                    redirectAttributes.addFlashAttribute("error", "学号已存在");
+                    redirectAttributes.addFlashAttribute("studentInfo", formData);
+                    return "redirect:/student/edit/" + id;
+                }
+            }
         } else {
+            if (studentService.isStudentNoDuplicate(formData.getStudentNo(), null)) {
+                redirectAttributes.addFlashAttribute("error", "学号已存在");
+                redirectAttributes.addFlashAttribute("studentInfo", formData);
+                return "redirect:/student/add";
+            }
             student = new StudentInfo();
         }
         student.setStudentNo(formData.getStudentNo());

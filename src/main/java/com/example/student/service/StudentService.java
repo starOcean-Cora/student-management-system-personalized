@@ -40,9 +40,16 @@ public class StudentService {
         studentInfoRepository.deleteById(id);
     }
 
-    public boolean isStudentNoDuplicate(String studentNo, Long excludeId) {
-        StudentInfo existing = studentInfoRepository.findByStudentNo(studentNo);
-        if (existing == null) return false;
-        return !existing.getId().equals(excludeId);
+    /**
+     * Check if studentNo already belongs to a different student.
+     * @param studentNo the student number to check
+     * @param currentId the id of the student being edited, null for new students
+     * @return true if duplicate (exists on another record), false if available
+     */
+    public boolean isStudentNoDuplicate(String studentNo, Long currentId) {
+        StudentInfo existingByNo = studentInfoRepository.findByStudentNo(studentNo);
+        if (existingByNo == null) return false;
+        if (currentId == null) return true;
+        return !existingByNo.getId().equals(currentId);
     }
 }
