@@ -1,6 +1,35 @@
 # 学生管理系统
 
-基于 Spring Boot 单体架构的学生管理系统通用骨架版。
+基于 Spring Boot 单体架构的学生管理系统通用骨架版。适用于课程设计和结课大作业。
+由于主播这次的课程设计老师要求不高所以主播作出来的样式也比较简陋，适合同样需要做学生管理系统的人进行二次开发或个人化定制
+主播最后就是将注册登陆页面和系统管理的首页都换成自己学校校门的背景图并添加了一些带学校标识的元素
+
+## 系统截图
+### 登录页面
+![登录页面](docs/images/login.png)
+### 管理员首页
+![管理员首页](docs/images/admin-home.png)
+### 学生管理
+![学生管理](docs/images/student-manage.png)
+### 班级管理
+![班级管理](docs/images/class-manage.png)
+### 课程管理
+![课程管理](docs/images/class-manage.png)
+### 选课管理
+![选课管理](docs/images/Course-selection-manage.png)
+### 考勤管理
+![考勤管理](docs/images/attendance-manage.png)
+![考勤管理2](docs/images/attendance-manage1.png)
+![考勤管理3](docs/images/attendance-manage2.png)
+### 请假管理
+![请假管理](docs/images/leaveshcool.png)
+### 成绩管理
+![成绩管理](docs/images/class-manage.png)
+### 成绩统计
+![成绩统计1](docs/images/Score-Statistics.png)
+![成绩统计2](docs/images/Score-Statistics1.png)
+### 系统管理
+![系统管理](docs/images/system-manage.png)
 
 ## 技术栈
 
