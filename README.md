@@ -1,10 +1,9 @@
 # 学生管理系统
 
-基于 Spring Boot 单体架构的学生管理系统通用骨架版。适用于课程设计和结课大作业。
-由于主播这次的课程设计老师要求不高所以主播作出来的样式也比较简陋，适合同样需要做学生管理系统的人进行二次开发或个人化定制
-主播最后就是将注册登陆页面和系统管理的首页都换成自己学校校门的背景图并添加了一些带学校标识的元素
+基于 Spring Boot 单体架构的学生管理系统通用骨架版，适用于课程设计和结课大作业。项目保持通用骨架结构，方便二次开发或个人化定制。
 
 ## 系统截图
+
 ### 登录页面
 ![登录页面](docs/images/login.png)
 ### 管理员首页
@@ -14,7 +13,7 @@
 ### 班级管理
 ![班级管理](docs/images/class-manage.png)
 ### 课程管理
-![课程管理](docs/images/class-manage.png)
+![课程管理](docs/images/course-manage.png)
 ### 选课管理
 ![选课管理](docs/images/Course-selection-manage.png)
 ### 考勤管理
@@ -24,7 +23,7 @@
 ### 请假管理
 ![请假管理](docs/images/leaveshcool.png)
 ### 成绩管理
-![成绩管理](docs/images/class-manage.png)
+![成绩管理](docs/images/grade-manage.png)
 ### 成绩统计
 ![成绩统计1](docs/images/Score-Statistics.png)
 ![成绩统计2](docs/images/Score-Statistics1.png)
@@ -40,8 +39,6 @@
 - Thymeleaf
 
 ## 功能模块
-
-### 已实现
 
 | 模块 | 管理员 | 学生 |
 |------|--------|------|
@@ -102,8 +99,8 @@
 ```yaml
 spring:
   datasource:
-    username: root     # 改为你的 MySQL 用户名
-    password: 123456   # 改为你的 MySQL 密码
+    username: root            # 改为你的 MySQL 用户名
+    password: your_password   # 改为你的 MySQL 密码
 ```
 
 ### 2. 启动项目
@@ -125,7 +122,7 @@ spring:
 | 管理员 | `admin` | `admin123` | 数据库初始化插入 |
 | 学生 | `zhangsan` | `123456` | 测试数据，也可自行注册 |
 
-> ⚠️ 以上默认密码仅用于本地实验演示，不要用于生产环境。如果运行期间修改过密码，以数据库当前数据为准。
+> ⚠️ 以上默认密码仅用于本地实验演示，不要用于生产环境。
 
 ## 项目结构
 
@@ -203,22 +200,38 @@ src/main/resources/
 | 第二阶段 | 基础资料管理（学生/班级/课程） | ✅ |
 | 第三阶段 | 选课信息管理 | ✅ |
 | 第四阶段 | 考勤/请假/成绩管理 | ✅ |
-| 第五阶段 | 系统管理 + README + 发布 | 进行中 |
+| 第五阶段 | 系统管理 + README + 发布 | ✅ |
 
-## 注意事项
+## 个性化定制与问题修复
 
-1. **通用骨架版**：本项目不含任何学校名称、logo、背景图、介绍文字等学校定制内容。
-2. **学校定制**：如需定制，建议单独开分支 `git checkout -b school-custom-version`，在 `src/main/resources/static/` 目录下替换背景图、logo、CSS 主题样式。
-3. **安全性**：当前密码采用明文存储，仅适合课程实验演示，不要用于生产环境。
-4. **数据库密码**：`application.yml` 中的数据库密码和 `schema.sql` 中的初始化账号密码提交到 Git 仓库前请确认不包含真实敏感信息。
-5. **`.gitignore`**：确保 `target/`、`.idea/`、`*.iml` 等文件不被提交。
+以下为通用骨架版基础上进行的界面定制和 Bug 修复总结。
 
-## GitHub / Gitee 发布检查清单
+### 界面定制
 
-- [ ] `application.yml` 中无真实生产数据库密码
-- [ ] `schema.sql` 中默认账号密码仅供实验演示
-- [ ] 无学校名称、logo、背景图等定制内容
-- [ ] `.gitignore` 已忽略 `target/`、`.idea/`、`*.iml`
-- [ ] `README.md` 运行步骤完整可复现
-- [ ] `git status` 确认无意外文件
-- [ ] 提交信息清晰
+- **登录页**：使用全屏校园背景图（`/images/login-bg.jpg`），CSS 伪元素叠加半透明遮罩保证登录框可读，登录卡片采用半透明白色圆角设计。
+- **首页**：右侧主内容区使用独立背景图（`/images/1.jpg`），顶部导航栏和左侧菜单栏保持后台管理系统布局不变，欢迎卡片采用毛玻璃效果（`backdrop-filter: blur` + 半透明背景），文字保持完全不透明。
+- **静态资源放行**：`WebConfig` 拦截器排除 `/images/**`、`/css/**`、`/js/**` 等静态路径，避免未登录时背景图被拦截重定向。
+
+### Bug 修复
+
+#### 学生编辑时学号重复校验失效
+
+**问题**：编辑学生时将学号改为其他已存在的学号，系统未提示重复并直接保存。
+
+**原因**：Controller 中 `excludeId` 逻辑依赖表单提交的 `id` 值，未从数据库加载原记录进行比对，边界情况下走入了新增分支的查重逻辑。
+
+**修复**：编辑时先通过 `findById` 从数据库读取原学生记录；若学号未变化则跳过查重直接保存；若学号改变则调用 `isStudentNoDuplicate(newNo, currentDbId)`，仅依据 `student_info.student_no` 列判断是否被其他学生占用。
+
+如需检查数据库中已存在的学号重复数据，可执行：
+
+```sql
+SELECT student_no, COUNT(*) FROM student_info GROUP BY student_no HAVING COUNT(*) > 1;
+```
+
+**涉及文件**：`StudentController.java`、`StudentService.java`、`student/form.html`
+
+### 注意事项
+
+- 本项目为通用骨架版，不含学校名称、logo、介绍文字等定制内容，背景图等静态资源可按需替换。
+- 密码采用明文存储，仅适合课程实验演示，不要用于生产环境。
+- `.gitignore` 应忽略 `target/`、`.idea/`、`*.iml` 等文件。
