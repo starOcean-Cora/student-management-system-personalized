@@ -78,24 +78,26 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(255,255,255,0.30);
+            background: rgba(255,255,255,0.08);
             z-index: 0;
         }
 
-        /* 欢迎卡片 */
+        /* 欢迎卡片 - 毛玻璃效果 */
         .card {
             position: relative;
             z-index: 1;
-            background: rgba(255,255,255,0.88);
-            backdrop-filter: blur(8px);
-            border-radius: 8px;
-            padding: 28px 36px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.36);
+            backdrop-filter: blur(9px);
+            -webkit-backdrop-filter: blur(9px);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 28px 40px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
             display: inline-block;
             max-width: 520px;
         }
-        .card .welcome { font-size: 20px; color: #2c3e50; margin-bottom: 10px; font-weight: 600; }
-        .card p { color: #666; font-size: 15px; line-height: 1.8; }
+        .card .welcome { font-size: 20px; color: #1a2a38; margin-bottom: 10px; font-weight: 600; letter-spacing: 1px; }
+        .card p { color: #2c3d4f; font-size: 15px; line-height: 1.8; }
     </style>
 </head>
 <body>
