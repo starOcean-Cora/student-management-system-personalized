@@ -232,6 +232,6 @@ SELECT student_no, COUNT(*) FROM student_info GROUP BY student_no HAVING COUNT(*
 
 ### 注意事项
 
-- 本项目为通用骨架版，不含学校名称、logo、介绍文字等定制内容，背景图等静态资源可按需替换。
+- 本项目为二次开发版，含学校名称、logo、介绍文字等定制内容。
 - 密码采用明文存储，仅适合课程实验演示，不要用于生产环境。
 - `.gitignore` 应忽略 `target/`、`.idea/`、`*.iml` 等文件。
