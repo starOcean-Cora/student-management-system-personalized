@@ -3,6 +3,9 @@ package com.example.student.controller;
 import com.example.student.entity.LeaveInfo;
 import com.example.student.repository.StudentInfoRepository;
 import com.example.student.service.LeaveService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +13,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Controller
 @RequestMapping("/leave")
@@ -25,13 +31,46 @@ public class LeaveController {
     }
 
     @GetMapping
-    public String list(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String list(@RequestParam(required = false) String leaveType,
+                       @RequestParam(required = false) String status,
+                       @RequestParam(defaultValue = "1") Integer page,
+                       HttpSession session,
+                       Model model,
+                       RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("role"))) {
-            redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
+            redirectAttributes.addFlashAttribute("error", "\u6ca1\u6709\u6743\u9650\u6267\u884c\u6b64\u64cd\u4f5c");
             return "redirect:/";
         }
-        model.addAttribute("leaves", leaveService.findAll());
+        String typeKeyword = leaveType == null ? "" : leaveType.trim();
+        String selectedStatus = status == null ? "" : status.trim();
+        int pageNumber = page == null || page < 1 ? 1 : page;
+        Page<LeaveInfo> leavePage = leaveService.findAdminPage(
+                typeKeyword,
+                selectedStatus,
+                PageRequest.of(pageNumber - 1, 10, Sort.by(Sort.Direction.ASC, "id"))
+        );
+        if (leavePage.getTotalPages() > 0 && pageNumber > leavePage.getTotalPages()) {
+            pageNumber = leavePage.getTotalPages();
+            leavePage = leaveService.findAdminPage(
+                    typeKeyword,
+                    selectedStatus,
+                    PageRequest.of(pageNumber - 1, 10, Sort.by(Sort.Direction.ASC, "id"))
+            );
+        }
+        model.addAttribute("leaves", leavePage.getContent());
+        model.addAttribute("leavePage", leavePage);
+        model.addAttribute("leaveType", typeKeyword);
+        model.addAttribute("status", selectedStatus);
+        model.addAttribute("statusOptions", Arrays.asList("待审批", "已通过", "已驳回"));
         model.addAttribute("role", session.getAttribute("role"));
+        model.addAttribute("currentPage", pageNumber);
+        model.addAttribute("totalPages", leavePage.getTotalPages());
+        model.addAttribute("totalElements", leavePage.getTotalElements());
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int i = 1; i <= leavePage.getTotalPages(); i++) {
+            pageNumbers.add(i);
+        }
+        model.addAttribute("pageNumbers", pageNumbers);
         return "leave/list";
     }
 
@@ -155,17 +194,52 @@ public class LeaveController {
     }
 
     @GetMapping("/my")
-    public String myLeaves(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String myLeaves(@RequestParam(required = false) String leaveType,
+                           @RequestParam(required = false) String status,
+                           @RequestParam(defaultValue = "1") Integer page,
+                           HttpSession session,
+                           Model model,
+                           RedirectAttributes redirectAttributes) {
         if (!"STUDENT".equals(session.getAttribute("role"))) {
-            redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
+            redirectAttributes.addFlashAttribute("error", "\u6ca1\u6709\u6743\u9650\u6267\u884c\u6b64\u64cd\u4f5c");
             return "redirect:/";
         }
         Long studentId = (Long) session.getAttribute("relatedStudentId");
         if (studentId == null) {
-            redirectAttributes.addFlashAttribute("error", "未关联学生信息");
+            redirectAttributes.addFlashAttribute("error", "\u672a\u5173\u8054\u5b66\u751f\u4fe1\u606f");
             return "redirect:/";
         }
-        model.addAttribute("leaves", leaveService.findByStudentId(studentId));
+        String typeKeyword = leaveType == null ? "" : leaveType.trim();
+        String selectedStatus = status == null ? "" : status.trim();
+        int pageNumber = page == null || page < 1 ? 1 : page;
+        Page<LeaveInfo> leavePage = leaveService.findStudentPage(
+                studentId,
+                typeKeyword,
+                selectedStatus,
+                PageRequest.of(pageNumber - 1, 10, Sort.by(Sort.Direction.ASC, "id"))
+        );
+        if (leavePage.getTotalPages() > 0 && pageNumber > leavePage.getTotalPages()) {
+            pageNumber = leavePage.getTotalPages();
+            leavePage = leaveService.findStudentPage(
+                    studentId,
+                    typeKeyword,
+                    selectedStatus,
+                    PageRequest.of(pageNumber - 1, 10, Sort.by(Sort.Direction.ASC, "id"))
+            );
+        }
+        model.addAttribute("leaves", leavePage.getContent());
+        model.addAttribute("leavePage", leavePage);
+        model.addAttribute("leaveType", typeKeyword);
+        model.addAttribute("status", selectedStatus);
+        model.addAttribute("statusOptions", Arrays.asList("待审批", "已通过", "已驳回"));
+        model.addAttribute("currentPage", pageNumber);
+        model.addAttribute("totalPages", leavePage.getTotalPages());
+        model.addAttribute("totalElements", leavePage.getTotalElements());
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int i = 1; i <= leavePage.getTotalPages(); i++) {
+            pageNumbers.add(i);
+        }
+        model.addAttribute("pageNumbers", pageNumbers);
         return "leave/my";
     }
 

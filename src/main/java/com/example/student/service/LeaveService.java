@@ -4,6 +4,8 @@ import com.example.student.entity.LeaveInfo;
 import com.example.student.entity.StudentInfo;
 import com.example.student.repository.LeaveInfoRepository;
 import com.example.student.repository.StudentInfoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,12 +27,24 @@ public class LeaveService {
         return leaveRepository.findAll();
     }
 
+    public Page<LeaveInfo> findAdminPage(String leaveType, String status, Pageable pageable) {
+        String typeKeyword = leaveType == null ? "" : leaveType.trim();
+        String selectedStatus = status == null ? "" : status.trim();
+        return leaveRepository.findAdminPage(typeKeyword, selectedStatus, pageable);
+    }
+
     public Optional<LeaveInfo> findById(Long id) {
         return leaveRepository.findById(id);
     }
 
     public List<LeaveInfo> findByStudentId(Long studentId) {
         return leaveRepository.findByStudentIdOrderByCreateTimeDesc(studentId);
+    }
+
+    public Page<LeaveInfo> findStudentPage(Long studentId, String leaveType, String status, Pageable pageable) {
+        String typeKeyword = leaveType == null ? "" : leaveType.trim();
+        String selectedStatus = status == null ? "" : status.trim();
+        return leaveRepository.findStudentPage(studentId, typeKeyword, selectedStatus, pageable);
     }
 
     public LeaveInfo save(LeaveInfo leave) {

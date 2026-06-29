@@ -10,7 +10,6 @@
         .header h3 { font-size: 18px; font-weight: 500; }
         .header-right { display: flex; align-items: center; gap: 15px; font-size: 14px; }
         .header-right a { color: #ecf0f1; text-decoration: none; }
-        .header-right a:hover { text-decoration: underline; }
         .tag { background: #3498db; padding: 2px 8px; border-radius: 3px; font-size: 12px; }
         .tag-admin { background: #e74c3c; }
         .container { display: flex; min-height: calc(100vh - 56px); }
@@ -24,85 +23,30 @@
         .error { background: #f8d7da; color: #721c24; padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
         .btn { padding: 7px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
         .btn-primary { background: #3498db; color: #fff; }
-        .btn-primary:hover { background: #2980b9; }
         .btn-danger { background: #e74c3c; color: #fff; }
-        .btn-danger:hover { background: #c0392b; }
         .btn-success { background: #27ae60; color: #fff; }
-        .btn-success:hover { background: #219a52; }
         .btn-warning { background: #f39c12; color: #fff; }
-        .btn-warning:hover { background: #d68910; }
-        .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
+        .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .filter-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-form input, .filter-form select { height: 34px; width: 180px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
         .actions { display: flex; gap: 6px; }
+        .empty { text-align: center; color: #999; padding: 24px 0; }
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 16px; font-size: 13px; color: #555; flex-wrap: wrap; }
+        .page-btn { min-width: 30px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; color: #2c3e50; text-decoration: none; background: #fff; text-align: center; }
+        .page-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+        .page-btn.disabled { color: #aaa; background: #f5f5f5; cursor: not-allowed; }
         .status-pending { color: #f39c12; font-weight: 600; }
         .status-approved { color: #27ae60; font-weight: 600; }
         .status-rejected { color: #e74c3c; font-weight: 600; }
     </style>
 </head>
 <body>
-<div class="header">
-    <h3>学生管理系统</h3>
-    <div class="header-right">
-        <span th:text="'欢迎，' + ${session.username}"></span>
-        <span class="tag tag-admin">管理员</span>
-        <a href="/logout" onclick="return confirm('确认退出登录？')">退出</a>
-    </div>
-</div>
-<div class="container">
-    <div class="sidebar">
-        <a href="/student">学生管理</a>
-        <a href="/class">班级管理</a>
-        <a href="/course">课程管理</a>
-        <a href="/selection">选课管理</a>
-        <a href="/attendance">考勤管理</a>
-        <a href="/leave" class="active">请假管理</a>
-        <a href="/grade">成绩管理</a>
-        <a href="/grade/statistics">成绩统计</a>
-        <a href="/system/password">系统管理</a>
-    </div>
-    <div class="main">
-        <div class="topbar">
-            <h2>请假管理</h2>
-            <a href="/leave/add" class="btn btn-success">新增请假</a>
-        </div>
-        <div th:if="${message}" class="message" th:text="${message}"></div>
-        <div th:if="${error}" class="error" th:text="${error}"></div>
-        <div class="table-card">
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>类型</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>审批人</th><th>审批时间</th><th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="l : ${leaves}">
-                    <td th:text="${l.id}"></td>
-                    <td th:text="${l.studentNo}"></td>
-                    <td th:text="${l.studentName}"></td>
-                    <td th:text="${l.className}"></td>
-                    <td th:text="${l.leaveType}"></td>
-                    <td th:text="${l.startTime}"></td>
-                    <td th:text="${l.endTime}"></td>
-                    <td>
-                        <span th:if="${l.status == '待审批'}" class="status-pending" th:text="${l.status}"></span>
-                        <span th:if="${l.status == '已通过'}" class="status-approved" th:text="${l.status}"></span>
-                        <span th:if="${l.status == '已驳回'}" class="status-rejected" th:text="${l.status}"></span>
-                    </td>
-                    <td th:text="${l.approverId}"></td>
-                    <td th:text="${l.approveTime}"></td>
-                    <td class="actions">
-                        <a th:if="${l.status == '待审批'}" th:href="@{/leave/approve/{id}(id=${l.id})}" class="btn btn-warning">审批</a>
-                        <a th:href="@{/leave/edit/{id}(id=${l.id})}" class="btn btn-primary">编辑</a>
-                        <a th:href="@{/leave/delete/{id}(id=${l.id})}" class="btn btn-danger" onclick="return confirm('确认删除该请假记录吗？')">删除</a>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+<div class="header"><h3>学生管理系统</h3><div class="header-right"><span th:text="'欢迎，' + ${session.username}"></span><span class="tag tag-admin">管理员</span><a href="/logout" onclick="return confirm('确认退出登录？')">退出</a></div></div>
+<div class="container"><div class="sidebar"><a href="/student">学生管理</a><a href="/class">班级管理</a><a href="/course">课程管理</a><a href="/selection">选课管理</a><a href="/attendance">考勤管理</a><a href="/leave" class="active">请假管理</a><a href="/grade">成绩管理</a><a href="/grade/statistics">成绩统计</a><a href="/system/password">系统管理</a></div>
+<div class="main"><div class="topbar"><h2>请假管理</h2><a href="/leave/add" class="btn btn-success">新增请假</a></div><div th:if="${message}" class="message" th:text="${message}"></div><div th:if="${error}" class="error" th:text="${error}"></div><div class="table-card"><form class="filter-form" th:action="@{/leave}" method="get"><input type="text" name="leaveType" placeholder="请输入请假类型" th:value="${leaveType}"><select name="status"><option value="">全部状态</option><option th:each="s : ${statusOptions}" th:value="${s}" th:text="${s}" th:selected="${status != null and status == s}"></option></select><button type="submit" class="btn btn-success">查询</button><a th:href="@{/leave}" class="btn btn-warning">清空条件</a></form><div class="table-wrap"><table><thead><tr><th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>类型</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>审批人</th><th>审批时间</th><th>操作</th></tr></thead><tbody><tr th:if="${#lists.isEmpty(leaves)}"><td colspan="11" class="empty">暂无请假数据</td></tr><tr th:each="l : ${leaves}"><td th:text="${l.id}"></td><td th:text="${l.studentNo}"></td><td th:text="${l.studentName}"></td><td th:text="${l.className}"></td><td th:text="${l.leaveType}"></td><td th:text="${l.startTime}"></td><td th:text="${l.endTime}"></td><td><span th:if="${l.status == '待审批'}" class="status-pending" th:text="${l.status}"></span><span th:if="${l.status == '已通过'}" class="status-approved" th:text="${l.status}"></span><span th:if="${l.status == '已驳回'}" class="status-rejected" th:text="${l.status}"></span></td><td th:text="${l.approverId}"></td><td th:text="${l.approveTime}"></td><td class="actions"><a th:if="${l.status == '待审批'}" th:href="@{/leave/approve/{id}(id=${l.id})}" class="btn btn-warning">审批</a><a th:href="@{/leave/edit/{id}(id=${l.id})}" class="btn btn-primary">编辑</a><a th:href="@{/leave/delete/{id}(id=${l.id})}" class="btn btn-danger" onclick="return confirm('确认删除该请假记录吗？')">删除</a></td></tr></tbody></table></div><div class="pagination"><span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span><span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span><a th:if="${currentPage > 1}" th:href="@{/leave(page=${currentPage - 1}, leaveType=${leaveType}, status=${status})}" class="page-btn">上一页</a><span th:if="${totalPages == 0}" class="page-btn active">1</span><a th:if="${totalPages > 0}" th:each="p : ${pageNumbers}" th:href="@{/leave(page=${p}, leaveType=${leaveType}, status=${status})}" th:text="${p}" th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a><span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span><a th:if="${currentPage < totalPages}" th:href="@{/leave(page=${currentPage + 1}, leaveType=${leaveType}, status=${status})}" class="page-btn">下一页</a><span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span></div></div></div></div>
+</body></html>
