@@ -21,11 +21,25 @@
         .message { background: #d4edda; color: #155724; padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
         .error { background: #f8d7da; color: #721c24; padding: 8px 14px; border-radius: 4px; margin-bottom: 12px; }
         .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
+        .filter-form { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-form input, .filter-form select { height: 34px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        .filter-form input { width: 180px; }
+        .filter-form select { width: 150px; }
+        .btn { padding: 7px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-block; }
+        .btn-success { background: #27ae60; color: #fff; }
+        .btn-success:hover { background: #219a52; }
+        .btn-warning { background: #f39c12; color: #fff; }
+        .btn-warning:hover { background: #d68910; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
         .text-danger { color: #e74c3c; font-weight: 600; }
+        .empty { text-align: center; color: #999; padding: 20px; }
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; }
+        .page-btn { padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; color: #555; text-decoration: none; background: #fff; }
+        .page-btn:hover, .page-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+        .page-btn.disabled { color: #aaa; background: #f5f5f5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -53,6 +67,15 @@
         <div th:if="${message}" class="message" th:text="${message}"></div>
         <div th:if="${error}" class="error" th:text="${error}"></div>
         <div class="table-card">
+            <form class="filter-form" th:action="@{/grade/my}" method="get">
+                <input type="text" name="courseName" placeholder="请输入课程名称" th:value="${courseName}">
+                <select name="examType">
+                    <option value="">全部考试类型</option>
+                    <option th:each="e : ${examTypes}" th:value="${e}" th:text="${e}" th:selected="${examType != null and examType == e}"></option>
+                </select>
+                <button type="submit" class="btn btn-success">查询</button>
+                <a th:href="@{/grade/my}" class="btn btn-warning">清空条件</a>
+            </form>
             <table>
                 <thead>
                 <tr>
@@ -61,7 +84,7 @@
                 </thead>
                 <tbody>
                 <tr th:if="${grades.empty}">
-                    <td colspan="7" style="text-align:center;color:#999;padding:20px;">暂无成绩记录</td>
+                    <td colspan="7" class="empty">暂无成绩记录</td>
                 </tr>
                 <tr th:each="g : ${grades}">
                     <td th:text="${g.courseName}"></td>
@@ -77,6 +100,16 @@
                 </tr>
                 </tbody>
             </table>
+            <div class="pagination">
+                <span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span>
+                <span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span>
+                <a th:if="${currentPage > 1}" th:href="@{/grade/my(page=${currentPage - 1}, courseName=${courseName}, examType=${examType})}" class="page-btn">上一页</a>
+                <span th:if="${totalPages == 0}" class="page-btn active">1</span>
+                <a th:if="${totalPages > 0}" th:each="p : ${pageNumbers}" th:href="@{/grade/my(page=${p}, courseName=${courseName}, examType=${examType})}" th:text="${p}" th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a>
+                <span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span>
+                <a th:if="${currentPage < totalPages}" th:href="@{/grade/my(page=${currentPage + 1}, courseName=${courseName}, examType=${examType})}" class="page-btn">下一页</a>
+                <span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span>
+            </div>
         </div>
     </div>
 </div>
