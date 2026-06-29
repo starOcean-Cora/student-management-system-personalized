@@ -6,6 +6,8 @@ import com.example.student.entity.StudentInfo;
 import com.example.student.repository.CourseInfoRepository;
 import com.example.student.repository.CourseSelectionRepository;
 import com.example.student.repository.StudentInfoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -31,6 +33,11 @@ public class CourseSelectionService {
         return selectionRepository.findAll();
     }
 
+    public Page<CourseSelection> findAdminPage(String studentName, Long courseId, Pageable pageable) {
+        String keyword = studentName == null ? "" : studentName.trim();
+        return selectionRepository.findAdminPage(keyword, courseId, pageable);
+    }
+
     public Optional<CourseSelection> findById(Long id) {
         return selectionRepository.findById(id);
     }
@@ -45,6 +52,11 @@ public class CourseSelectionService {
 
     public List<CourseSelection> findByStudentId(Long studentId) {
         return selectionRepository.findByStudentId(studentId);
+    }
+
+    public Page<CourseSelection> findStudentPage(Long studentId, String courseName, Long courseId, Pageable pageable) {
+        String keyword = courseName == null ? "" : courseName.trim();
+        return selectionRepository.findStudentPage(studentId, keyword, courseId, pageable);
     }
 
     public boolean isAlreadySelected(Long studentId, Long courseId) {
