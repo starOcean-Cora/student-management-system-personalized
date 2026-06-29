@@ -6,6 +6,8 @@ import com.example.student.entity.StudentInfo;
 import com.example.student.repository.AttendanceInfoRepository;
 import com.example.student.repository.CourseInfoRepository;
 import com.example.student.repository.StudentInfoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,12 +32,22 @@ public class AttendanceService {
         return attendanceRepository.findAll();
     }
 
+    public Page<AttendanceInfo> findAdminPage(String studentNo, Long studentId, Pageable pageable) {
+        String keyword = studentNo == null ? "" : studentNo.trim();
+        return attendanceRepository.findAdminPage(keyword, studentId, pageable);
+    }
+
     public Optional<AttendanceInfo> findById(Long id) {
         return attendanceRepository.findById(id);
     }
 
     public List<AttendanceInfo> findByStudentId(Long studentId) {
         return attendanceRepository.findByStudentIdOrderByAttendanceDateDesc(studentId);
+    }
+
+    public Page<AttendanceInfo> findStudentPage(Long studentId, String courseName, Long courseId, Pageable pageable) {
+        String keyword = courseName == null ? "" : courseName.trim();
+        return attendanceRepository.findStudentPage(studentId, keyword, courseId, pageable);
     }
 
     public AttendanceInfo save(AttendanceInfo attendance) {
