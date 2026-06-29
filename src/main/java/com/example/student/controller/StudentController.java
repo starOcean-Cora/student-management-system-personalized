@@ -131,6 +131,41 @@ public class StudentController {
         return "redirect:/student";
     }
 
+
+    @PostMapping("/batch-delete")
+    public String batchDelete(@RequestParam(required = false) List<Long> ids,
+                              @RequestParam(required = false) String name,
+                              @RequestParam(required = false) Long classId,
+                              @RequestParam(required = false) Integer page,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) {
+            redirectAttributes.addFlashAttribute("error", "\u6ca1\u6709\u6743\u9650\u6267\u884c\u6b64\u64cd\u4f5c");
+            return "redirect:/student";
+        }
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55");
+        if (name != null) redirectAttributes.addAttribute("name", name);
+        if (classId != null) redirectAttributes.addAttribute("classId", classId);
+        if (page != null) redirectAttributes.addAttribute("page", page);
+            return "redirect:/student";
+        }
+        try {
+            int count = studentService.batchDeleteByIds(ids);
+            if (count == 0) {
+                redirectAttributes.addFlashAttribute("error", "\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "\u6210\u529f\u5220\u9664 " + count + " \u6761\u8bb0\u5f55");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "\u6279\u91cf\u5220\u9664\u5931\u8d25\uff0c\u90e8\u5206\u8bb0\u5f55\u53ef\u80fd\u5b58\u5728\u5173\u8054\u6570\u636e");
+        }
+        if (name != null) redirectAttributes.addAttribute("name", name);
+        if (classId != null) redirectAttributes.addAttribute("classId", classId);
+        if (page != null) redirectAttributes.addAttribute("page", page);
+        return "redirect:/student";
+    }
+
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Long id,
                            Model model,

@@ -43,10 +43,56 @@
         .status-pending { color: #f39c12; font-weight: 600; }
         .status-approved { color: #27ae60; font-weight: 600; }
         .status-rejected { color: #e74c3c; font-weight: 600; }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .card-footer .pagination { margin-top: 0; }
+        .select-col { width: 42px; text-align: center; }
+        .batch-form { margin: 0; }
+        .btn-danger:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 <div class="header"><h3>学生管理系统</h3><div class="header-right"><span th:text="'欢迎，' + ${session.username}"></span><span class="tag tag-admin">管理员</span><a href="/logout" onclick="return confirm('确认退出登录？')">退出</a></div></div>
 <div class="container"><div class="sidebar"><a href="/student">学生管理</a><a href="/class">班级管理</a><a href="/course">课程管理</a><a href="/selection">选课管理</a><a href="/attendance">考勤管理</a><a href="/leave" class="active">请假管理</a><a href="/grade">成绩管理</a><a href="/grade/statistics">成绩统计</a><a href="/system/password">系统管理</a></div>
-<div class="main"><div class="topbar"><h2>请假管理</h2><a href="/leave/add" class="btn btn-success">新增请假</a></div><div th:if="${message}" class="message" th:text="${message}"></div><div th:if="${error}" class="error" th:text="${error}"></div><div class="table-card"><form class="filter-form" th:action="@{/leave}" method="get"><input type="text" name="leaveType" placeholder="请输入请假类型" th:value="${leaveType}"><select name="status"><option value="">全部状态</option><option th:each="s : ${statusOptions}" th:value="${s}" th:text="${s}" th:selected="${status != null and status == s}"></option></select><button type="submit" class="btn btn-success">查询</button><a th:href="@{/leave}" class="btn btn-warning">清空条件</a></form><div class="table-wrap"><table><thead><tr><th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>类型</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>审批人</th><th>审批时间</th><th>操作</th></tr></thead><tbody><tr th:if="${#lists.isEmpty(leaves)}"><td colspan="11" class="empty">暂无请假数据</td></tr><tr th:each="l : ${leaves}"><td th:text="${l.id}"></td><td th:text="${l.studentNo}"></td><td th:text="${l.studentName}"></td><td th:text="${l.className}"></td><td th:text="${l.leaveType}"></td><td th:text="${l.startTime}"></td><td th:text="${l.endTime}"></td><td><span th:if="${l.status == '待审批'}" class="status-pending" th:text="${l.status}"></span><span th:if="${l.status == '已通过'}" class="status-approved" th:text="${l.status}"></span><span th:if="${l.status == '已驳回'}" class="status-rejected" th:text="${l.status}"></span></td><td th:text="${l.approverId}"></td><td th:text="${l.approveTime}"></td><td class="actions"><a th:if="${l.status == '待审批'}" th:href="@{/leave/approve/{id}(id=${l.id})}" class="btn btn-warning">审批</a><a th:href="@{/leave/edit/{id}(id=${l.id})}" class="btn btn-primary">编辑</a><a th:href="@{/leave/delete/{id}(id=${l.id})}" class="btn btn-danger" onclick="return confirm('确认删除该请假记录吗？')">删除</a></td></tr></tbody></table></div><div class="pagination"><span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span><span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span><a th:if="${currentPage > 1}" th:href="@{/leave(page=${currentPage - 1}, leaveType=${leaveType}, status=${status})}" class="page-btn">上一页</a><span th:if="${totalPages == 0}" class="page-btn active">1</span><a th:if="${totalPages > 0}" th:each="p : ${pageNumbers}" th:href="@{/leave(page=${p}, leaveType=${leaveType}, status=${status})}" th:text="${p}" th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a><span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span><a th:if="${currentPage < totalPages}" th:href="@{/leave(page=${currentPage + 1}, leaveType=${leaveType}, status=${status})}" class="page-btn">下一页</a><span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span></div></div></div></div>
+<div class="main"><div class="topbar"><h2>请假管理</h2><a href="/leave/add" class="btn btn-success">新增请假</a></div><div th:if="${message}" class="message" th:text="${message}"></div><div th:if="${error}" class="error" th:text="${error}"></div><div class="table-card"><form class="filter-form" th:action="@{/leave}" method="get"><input type="text" name="leaveType" placeholder="请输入请假类型" th:value="${leaveType}"><select name="status"><option value="">全部状态</option><option th:each="s : ${statusOptions}" th:value="${s}" th:text="${s}" th:selected="${status != null and status == s}"></option></select><button type="submit" class="btn btn-success">查询</button><a th:href="@{/leave}" class="btn btn-warning">清空条件</a></form><form id="batchDeleteForm" class="batch-form" th:action="@{/leave/batch-delete}" method="post">
+                <input type="hidden" name="leaveType" th:value="${leaveType}">
+                <input type="hidden" name="status" th:value="${status}">
+                <input type="hidden" name="page" th:value="${page}">
+            <div class="table-wrap"><table><thead><tr><th class="select-col"><input type="checkbox" id="selectAll" th:disabled="${#lists.isEmpty(leaves)}"></th><th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>类型</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>审批人</th><th>审批时间</th><th>操作</th></tr></thead><tbody><tr th:if="${#lists.isEmpty(leaves)}"><td colspan="12" class="empty">暂无请假数据</td></tr><tr th:each="l : ${leaves}"><td class="select-col"><input type="checkbox" class="row-check" name="ids" th:value="${l.id}"></td><td th:text="${l.id}"></td><td th:text="${l.studentNo}"></td><td th:text="${l.studentName}"></td><td th:text="${l.className}"></td><td th:text="${l.leaveType}"></td><td th:text="${l.startTime}"></td><td th:text="${l.endTime}"></td><td><span th:if="${l.status == '待审批'}" class="status-pending" th:text="${l.status}"></span><span th:if="${l.status == '已通过'}" class="status-approved" th:text="${l.status}"></span><span th:if="${l.status == '已驳回'}" class="status-rejected" th:text="${l.status}"></span></td><td th:text="${l.approverId}"></td><td th:text="${l.approveTime}"></td><td class="actions"><a th:if="${l.status == '待审批'}" th:href="@{/leave/approve/{id}(id=${l.id})}" class="btn btn-warning">审批</a><a th:href="@{/leave/edit/{id}(id=${l.id})}" class="btn btn-primary">编辑</a><a th:href="@{/leave/delete/{id}(id=${l.id})}" class="btn btn-danger" onclick="return confirm('确认删除该请假记录吗？')">删除</a></td></tr></tbody></table></div><div class="card-footer"><button type="submit" id="batchDeleteBtn" class="btn btn-danger" disabled>&#25209;&#37327;&#21024;&#38500;</button><div class="pagination"><span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span><span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span><a th:if="${currentPage > 1}" th:href="@{/leave(page=${currentPage - 1}, leaveType=${leaveType}, status=${status})}" class="page-btn">上一页</a><span th:if="${totalPages == 0}" class="page-btn active">1</span><a th:if="${totalPages > 0}" th:each="p : ${pageNumbers}" th:href="@{/leave(page=${p}, leaveType=${leaveType}, status=${status})}" th:text="${p}" th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a><span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span><a th:if="${currentPage < totalPages}" th:href="@{/leave(page=${currentPage + 1}, leaveType=${leaveType}, status=${status})}" class="page-btn">下一页</a><span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span></div></div></div></div>
+            </form>
+</div></div>
+
+<script>
+(function () {
+    var form = document.getElementById('batchDeleteForm');
+    if (!form) return;
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = Array.prototype.slice.call(document.querySelectorAll('.row-check'));
+    var button = document.getElementById('batchDeleteBtn');
+    function updateState() {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (button) button.disabled = checkedCount === 0;
+        if (selectAll) selectAll.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+    }
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+            updateState();
+        });
+    }
+    checkboxes.forEach(function (cb) { cb.addEventListener('change', updateState); });
+    form.addEventListener('submit', function (e) {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (checkedCount === 0) {
+            alert('\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55');
+            e.preventDefault();
+            return;
+        }
+        if (!confirm('\u786e\u5b9a\u5220\u9664\u9009\u4e2d\u7684 ' + checkedCount + ' \u6761\u8bb0\u5f55\u5417\uff1f\u6b64\u64cd\u4f5c\u4e0d\u53ef\u6062\u590d\u3002')) {
+            e.preventDefault();
+        }
+    });
+    updateState();
+})();
+</script>
 </body></html>

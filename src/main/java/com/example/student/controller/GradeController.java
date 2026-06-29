@@ -5,12 +5,17 @@ import com.example.student.repository.CourseInfoRepository;
 import com.example.student.repository.ClassInfoRepository;
 import com.example.student.repository.StudentInfoRepository;
 import com.example.student.service.GradeService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Controller
 @RequestMapping("/grade")
@@ -32,13 +37,47 @@ public class GradeController {
     }
 
     @GetMapping
-    public String list(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String list(@RequestParam(required = false) String courseName,
+                       @RequestParam(required = false) String examType,
+                       @RequestParam(defaultValue = "1") Integer page,
+                       HttpSession session,
+                       Model model,
+                       RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("role"))) {
             redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
             return "redirect:/";
         }
-        model.addAttribute("grades", gradeService.findAllOrderByScoreDesc());
+        String courseKeyword = courseName == null ? "" : courseName.trim();
+        String selectedExamType = examType == null ? "" : examType.trim();
+        int pageNumber = page == null || page < 1 ? 1 : page;
+        Page<GradeInfo> gradePage = gradeService.findAdminPage(
+                courseKeyword,
+                selectedExamType,
+                PageRequest.of(pageNumber - 1, 10)
+        );
+        if (gradePage.getTotalPages() > 0 && pageNumber > gradePage.getTotalPages()) {
+            pageNumber = gradePage.getTotalPages();
+            gradePage = gradeService.findAdminPage(
+                    courseKeyword,
+                    selectedExamType,
+                    PageRequest.of(pageNumber - 1, 10)
+            );
+        }
+        model.addAttribute("grades", gradePage.getContent());
+        model.addAttribute("gradePage", gradePage);
+        model.addAttribute("courseName", courseKeyword);
+        model.addAttribute("examType", selectedExamType);
+        model.addAttribute("examTypes", Arrays.asList("期中考试", "期末考试", "平时成绩"));
         model.addAttribute("role", session.getAttribute("role"));
+        model.addAttribute("currentPage", pageNumber);
+        model.addAttribute("totalPages", gradePage.getTotalPages());
+        model.addAttribute("totalElements", gradePage.getTotalElements());
+        model.addAttribute("rankOffset", (pageNumber - 1) * 10);
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int i = 1; i <= gradePage.getTotalPages(); i++) {
+            pageNumbers.add(i);
+        }
+        model.addAttribute("pageNumbers", pageNumbers);
         return "grade/list";
     }
 
@@ -102,6 +141,41 @@ public class GradeController {
         return "redirect:/grade";
     }
 
+
+    @PostMapping("/batch-delete")
+    public String batchDelete(@RequestParam(required = false) List<Long> ids,
+                              @RequestParam(required = false) String courseName,
+                              @RequestParam(required = false) String examType,
+                              @RequestParam(required = false) Integer page,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+        if (!"ADMIN".equals(session.getAttribute("role"))) {
+            redirectAttributes.addFlashAttribute("error", "\u6ca1\u6709\u6743\u9650\u6267\u884c\u6b64\u64cd\u4f5c");
+            return "redirect:/grade";
+        }
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55");
+        if (courseName != null) redirectAttributes.addAttribute("courseName", courseName);
+        if (examType != null) redirectAttributes.addAttribute("examType", examType);
+        if (page != null) redirectAttributes.addAttribute("page", page);
+            return "redirect:/grade";
+        }
+        try {
+            int count = gradeService.batchDeleteByIds(ids);
+            if (count == 0) {
+                redirectAttributes.addFlashAttribute("error", "\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "\u6210\u529f\u5220\u9664 " + count + " \u6761\u8bb0\u5f55");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "\u6279\u91cf\u5220\u9664\u5931\u8d25\uff0c\u90e8\u5206\u8bb0\u5f55\u53ef\u80fd\u5b58\u5728\u5173\u8054\u6570\u636e");
+        }
+        if (courseName != null) redirectAttributes.addAttribute("courseName", courseName);
+        if (examType != null) redirectAttributes.addAttribute("examType", examType);
+        if (page != null) redirectAttributes.addAttribute("page", page);
+        return "redirect:/grade";
+    }
+
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Long id,
                            Model model,
@@ -132,7 +206,12 @@ public class GradeController {
     }
 
     @GetMapping("/my")
-    public String myGrades(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String myGrades(@RequestParam(required = false) String courseName,
+                           @RequestParam(required = false) String examType,
+                           @RequestParam(defaultValue = "1") Integer page,
+                           HttpSession session,
+                           Model model,
+                           RedirectAttributes redirectAttributes) {
         if (!"STUDENT".equals(session.getAttribute("role"))) {
             redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
             return "redirect:/";
@@ -142,7 +221,37 @@ public class GradeController {
             redirectAttributes.addFlashAttribute("error", "未关联学生信息");
             return "redirect:/";
         }
-        model.addAttribute("grades", gradeService.findByStudentId(studentId));
+        String courseKeyword = courseName == null ? "" : courseName.trim();
+        String selectedExamType = examType == null ? "" : examType.trim();
+        int pageNumber = page == null || page < 1 ? 1 : page;
+        Page<GradeInfo> gradePage = gradeService.findStudentPage(
+                studentId,
+                courseKeyword,
+                selectedExamType,
+                PageRequest.of(pageNumber - 1, 10)
+        );
+        if (gradePage.getTotalPages() > 0 && pageNumber > gradePage.getTotalPages()) {
+            pageNumber = gradePage.getTotalPages();
+            gradePage = gradeService.findStudentPage(
+                    studentId,
+                    courseKeyword,
+                    selectedExamType,
+                    PageRequest.of(pageNumber - 1, 10)
+            );
+        }
+        model.addAttribute("grades", gradePage.getContent());
+        model.addAttribute("gradePage", gradePage);
+        model.addAttribute("courseName", courseKeyword);
+        model.addAttribute("examType", selectedExamType);
+        model.addAttribute("examTypes", Arrays.asList("期中考试", "期末考试", "平时成绩"));
+        model.addAttribute("currentPage", pageNumber);
+        model.addAttribute("totalPages", gradePage.getTotalPages());
+        model.addAttribute("totalElements", gradePage.getTotalElements());
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int i = 1; i <= gradePage.getTotalPages(); i++) {
+            pageNumbers.add(i);
+        }
+        model.addAttribute("pageNumbers", pageNumbers);
         return "grade/my";
     }
     @GetMapping("/statistics")

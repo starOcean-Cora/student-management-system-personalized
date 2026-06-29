@@ -48,6 +48,12 @@
         .page-btn:hover { background: #f5f6fa; }
         .page-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
         .page-btn.disabled { color: #aaa; background: #f5f5f5; cursor: not-allowed; }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .card-footer .pagination { margin-top: 0; }
+        .select-col { width: 42px; text-align: center; }
+        .batch-form { margin: 0; }
+        .btn-danger:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -102,23 +108,27 @@
                 <button type="submit" class="btn btn-success">查询</button>
                 <a th:href="@{/course}" class="btn btn-warning">清空条件</a>
             </form>
+            <form id="batchDeleteForm" class="batch-form" th:action="@{/course/batch-delete}" method="post">
+                <input type="hidden" name="courseName" th:value="${courseName}">
+                <input type="hidden" name="courseCode" th:value="${courseCode}">
+                <input type="hidden" name="page" th:value="${page}">
             <div class="table-wrap">
                 <table>
                     <thead>
                     <tr>
-                        <th>ID</th><th>课程编号</th><th>课程名称</th><th>授课教师</th><th>学分</th><th>课时</th><th>备注</th>
+                        <th th:if="${session.role == 'ADMIN'}" class="select-col"><input type="checkbox" id="selectAll" th:disabled="${#lists.isEmpty(courses)}"></th><th>ID</th><th>课程编号</th><th>课程名称</th><th>授课教师</th><th>学分</th><th>课时</th><th>备注</th>
                         <th th:if="${session.role == 'ADMIN'}">操作</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(courses) and session.role == 'ADMIN'}">
-                        <td colspan="8" class="empty">暂无课程数据</td>
+                        <td colspan="9" class="empty">暂无课程数据</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(courses) and session.role != 'ADMIN'}">
                         <td colspan="7" class="empty">暂无课程数据</td>
                     </tr>
                     <tr th:each="c : ${courses}">
-                        <td th:text="${c.id}"></td>
+                        <td th:if="${session.role == 'ADMIN'}" class="select-col"><input type="checkbox" class="row-check" name="ids" th:value="${c.id}"></td><td th:text="${c.id}"></td>
                         <td th:text="${c.courseCode}"></td>
                         <td th:text="${c.courseName}"></td>
                         <td th:text="${c.teacherName}"></td>
@@ -133,7 +143,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="pagination">
+            <div class="card-footer"><button th:if="${session.role == 'ADMIN'}" type="submit" id="batchDeleteBtn" class="btn btn-danger" disabled>&#25209;&#37327;&#21024;&#38500;</button><div class="pagination">
                 <span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span>
                 <span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span>
                 <a th:if="${currentPage > 1}"
@@ -150,9 +160,44 @@
                    th:href="@{/course(page=${currentPage + 1}, courseName=${courseName}, courseCode=${courseCode})}"
                    class="page-btn">下一页</a>
                 <span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span>
-            </div>
+            </div></div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var form = document.getElementById('batchDeleteForm');
+    if (!form) return;
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = Array.prototype.slice.call(document.querySelectorAll('.row-check'));
+    var button = document.getElementById('batchDeleteBtn');
+    function updateState() {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (button) button.disabled = checkedCount === 0;
+        if (selectAll) selectAll.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+    }
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+            updateState();
+        });
+    }
+    checkboxes.forEach(function (cb) { cb.addEventListener('change', updateState); });
+    form.addEventListener('submit', function (e) {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (checkedCount === 0) {
+            alert('\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55');
+            e.preventDefault();
+            return;
+        }
+        if (!confirm('\u786e\u5b9a\u5220\u9664\u9009\u4e2d\u7684 ' + checkedCount + ' \u6761\u8bb0\u5f55\u5417\uff1f\u6b64\u64cd\u4f5c\u4e0d\u53ef\u6062\u590d\u3002')) {
+            e.preventDefault();
+        }
+    });
+    updateState();
+})();
+</script>
 </body>
 </html>

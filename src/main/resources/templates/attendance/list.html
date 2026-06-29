@@ -48,6 +48,12 @@
         .page-btn:hover { background: #f5f6fa; }
         .page-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
         .page-btn.disabled { color: #aaa; background: #f5f5f5; cursor: not-allowed; }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .card-footer .pagination { margin-top: 0; }
+        .select-col { width: 42px; text-align: center; }
+        .batch-form { margin: 0; }
+        .btn-danger:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -59,10 +65,49 @@
         <div th:if="${message}" class="message" th:text="${message}"></div><div th:if="${error}" class="error" th:text="${error}"></div>
         <div class="table-card">
             <form class="filter-form" th:action="@{/attendance}" method="get"><input type="text" name="studentNo" placeholder="请输入学生学号" th:value="${studentNo}"><select name="studentId"><option value="">全部学生</option><option th:each="s : ${students}" th:value="${s.id}" th:text="${s.name + '（' + s.studentNo + '）'}" th:selected="${studentId != null and studentId == s.id}"></option></select><button type="submit" class="btn btn-success">查询</button><a th:href="@{/attendance}" class="btn btn-warning">清空条件</a></form>
-            <div class="table-wrap"><table><thead><tr><th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>考勤日期</th><th>状态</th><th>备注</th><th>操作</th></tr></thead><tbody><tr th:if="${#lists.isEmpty(attendances)}"><td colspan="9" class="empty">暂无考勤数据</td></tr><tr th:each="a : ${attendances}"><td th:text="${a.id}"></td><td th:text="${a.studentNo}"></td><td th:text="${a.studentName}"></td><td th:text="${a.className}"></td><td th:text="${a.courseName}"></td><td th:text="${a.attendanceDate}"></td><td th:text="${a.status}"></td><td th:text="${a.remark}"></td><td class="actions"><a th:href="@{/attendance/edit/{id}(id=${a.id})}" class="btn btn-primary">编辑</a><a th:href="@{/attendance/delete/{id}(id=${a.id})}" class="btn btn-danger" onclick="return confirm('确认删除该考勤记录吗？')">删除</a></td></tr></tbody></table></div>
-            <div class="pagination"><span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span><span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span><a th:if="${currentPage > 1}" th:href="@{/attendance(page=${currentPage - 1}, studentNo=${studentNo}, studentId=${studentId})}" class="page-btn">上一页</a><span th:if="${totalPages == 0}" class="page-btn active">1</span><a th:if="${totalPages > 0}" th:each="p : ${pageNumbers}" th:href="@{/attendance(page=${p}, studentNo=${studentNo}, studentId=${studentId})}" th:text="${p}" th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a><span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span><a th:if="${currentPage < totalPages}" th:href="@{/attendance(page=${currentPage + 1}, studentNo=${studentNo}, studentId=${studentId})}" class="page-btn">下一页</a><span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span></div>
+            <form id="batchDeleteForm" class="batch-form" th:action="@{/attendance/batch-delete}" method="post">
+                <input type="hidden" name="studentNo" th:value="${studentNo}">
+                <input type="hidden" name="studentId" th:value="${studentId}">
+                <input type="hidden" name="page" th:value="${page}">
+            <div class="table-wrap"><table><thead><tr><th class="select-col"><input type="checkbox" id="selectAll" th:disabled="${#lists.isEmpty(attendances)}"></th><th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>考勤日期</th><th>状态</th><th>备注</th><th>操作</th></tr></thead><tbody><tr th:if="${#lists.isEmpty(attendances)}"><td colspan="10" class="empty">暂无考勤数据</td></tr><tr th:each="a : ${attendances}"><td class="select-col"><input type="checkbox" class="row-check" name="ids" th:value="${a.id}"></td><td th:text="${a.id}"></td><td th:text="${a.studentNo}"></td><td th:text="${a.studentName}"></td><td th:text="${a.className}"></td><td th:text="${a.courseName}"></td><td th:text="${a.attendanceDate}"></td><td th:text="${a.status}"></td><td th:text="${a.remark}"></td><td class="actions"><a th:href="@{/attendance/edit/{id}(id=${a.id})}" class="btn btn-primary">编辑</a><a th:href="@{/attendance/delete/{id}(id=${a.id})}" class="btn btn-danger" onclick="return confirm('确认删除该考勤记录吗？')">删除</a></td></tr></tbody></table></div>
+            <div class="card-footer"><button type="submit" id="batchDeleteBtn" class="btn btn-danger" disabled>&#25209;&#37327;&#21024;&#38500;</button><div class="pagination"><span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span><span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span><a th:if="${currentPage > 1}" th:href="@{/attendance(page=${currentPage - 1}, studentNo=${studentNo}, studentId=${studentId})}" class="page-btn">上一页</a><span th:if="${totalPages == 0}" class="page-btn active">1</span><a th:if="${totalPages > 0}" th:each="p : ${pageNumbers}" th:href="@{/attendance(page=${p}, studentNo=${studentNo}, studentId=${studentId})}" th:text="${p}" th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a><span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span><a th:if="${currentPage < totalPages}" th:href="@{/attendance(page=${currentPage + 1}, studentNo=${studentNo}, studentId=${studentId})}" class="page-btn">下一页</a><span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span></div>
         </div>
     </div>
 </div>
+
+</form>
+<script>
+(function () {
+    var form = document.getElementById('batchDeleteForm');
+    if (!form) return;
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = Array.prototype.slice.call(document.querySelectorAll('.row-check'));
+    var button = document.getElementById('batchDeleteBtn');
+    function updateState() {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (button) button.disabled = checkedCount === 0;
+        if (selectAll) selectAll.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+    }
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+            updateState();
+        });
+    }
+    checkboxes.forEach(function (cb) { cb.addEventListener('change', updateState); });
+    form.addEventListener('submit', function (e) {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (checkedCount === 0) {
+            alert('\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55');
+            e.preventDefault();
+            return;
+        }
+        if (!confirm('\u786e\u5b9a\u5220\u9664\u9009\u4e2d\u7684 ' + checkedCount + ' \u6761\u8bb0\u5f55\u5417\uff1f\u6b64\u64cd\u4f5c\u4e0d\u53ef\u6062\u590d\u3002')) {
+            e.preventDefault();
+        }
+    });
+    updateState();
+})();
+</script>
 </body>
 </html>

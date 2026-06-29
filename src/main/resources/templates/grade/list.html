@@ -29,13 +29,31 @@
         .btn-danger:hover { background: #c0392b; }
         .btn-success { background: #27ae60; color: #fff; }
         .btn-success:hover { background: #219a52; }
-        .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
+        .btn-warning { background: #f39c12; color: #fff; }
+        .btn-warning:hover { background: #d68910; }
+        .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .filter-form { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-form input, .filter-form select { height: 34px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        .filter-form input { width: 180px; }
+        .filter-form select { width: 150px; }
+        .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
         .actions { display: flex; gap: 6px; }
         .text-danger { color: #e74c3c; font-weight: 600; }
+        .empty { text-align: center; color: #999; padding: 20px; }
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; }
+        .page-btn { padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; color: #555; text-decoration: none; background: #fff; }
+        .page-btn:hover, .page-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+        .page-btn.disabled { color: #aaa; background: #f5f5f5; cursor: not-allowed; }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .card-footer .pagination { margin-top: 0; }
+        .select-col { width: 42px; text-align: center; }
+        .batch-form { margin: 0; }
+        .btn-danger:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -67,15 +85,32 @@
         <div th:if="${message}" class="message" th:text="${message}"></div>
         <div th:if="${error}" class="error" th:text="${error}"></div>
         <div class="table-card">
+            <form class="filter-form" th:action="@{/grade}" method="get">
+                <input type="text" name="courseName" placeholder="请输入课程名称" th:value="${courseName}">
+                <select name="examType">
+                    <option value="">全部考试类型</option>
+                    <option th:each="e : ${examTypes}" th:value="${e}" th:text="${e}" th:selected="${examType != null and examType == e}"></option>
+                </select>
+                <button type="submit" class="btn btn-success">查询</button>
+                <a th:href="@{/grade}" class="btn btn-warning">清空条件</a>
+            </form>
+            <form id="batchDeleteForm" class="batch-form" th:action="@{/grade/batch-delete}" method="post">
+                <input type="hidden" name="courseName" th:value="${courseName}">
+                <input type="hidden" name="examType" th:value="${examType}">
+                <input type="hidden" name="page" th:value="${page}">
+            <div class="table-wrap">
             <table>
                 <thead>
                 <tr>
-                    <th>排名</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>考试类型</th><th>成绩</th><th>等级</th><th>状态</th><th>录入时间</th><th>操作</th>
+                    <th class="select-col"><input type="checkbox" id="selectAll" th:disabled="${#lists.isEmpty(grades)}"></th><th>排名</th><th>学号</th><th>姓名</th><th>班级</th><th>课程</th><th>考试类型</th><th>成绩</th><th>等级</th><th>状态</th><th>录入时间</th><th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
+                <tr th:if="${#lists.isEmpty(grades)}">
+                    <td colspan="12" class="empty">暂无成绩数据</td>
+                </tr>
                 <tr th:each="g,iterStat : ${grades}">
-                    <td th:text="${iterStat.index + 1}"></td>
+                    <td class="select-col"><input type="checkbox" class="row-check" name="ids" th:value="${g.id}"></td><td th:text="${rankOffset + iterStat.index + 1}"></td>
                     <td th:text="${g.studentNo}"></td>
                     <td th:text="${g.studentName}"></td>
                     <td th:text="${g.className}"></td>
@@ -95,8 +130,54 @@
                 </tr>
                 </tbody>
             </table>
+            </div>
+            <div class="card-footer"><button type="submit" id="batchDeleteBtn" class="btn btn-danger" disabled>&#25209;&#37327;&#21024;&#38500;</button><div class="pagination">
+                <span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span>
+                <span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span>
+                <a th:if="${currentPage > 1}" th:href="@{/grade(page=${currentPage - 1}, courseName=${courseName}, examType=${examType})}" class="page-btn">上一页</a>
+                <span th:if="${totalPages == 0}" class="page-btn active">1</span>
+                <a th:if="${totalPages > 0}" th:each="p : ${pageNumbers}" th:href="@{/grade(page=${p}, courseName=${courseName}, examType=${examType})}" th:text="${p}" th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a>
+                <span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span>
+                <a th:if="${currentPage < totalPages}" th:href="@{/grade(page=${currentPage + 1}, courseName=${courseName}, examType=${examType})}" class="page-btn">下一页</a>
+                <span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span>
+            </div></div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var form = document.getElementById('batchDeleteForm');
+    if (!form) return;
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = Array.prototype.slice.call(document.querySelectorAll('.row-check'));
+    var button = document.getElementById('batchDeleteBtn');
+    function updateState() {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (button) button.disabled = checkedCount === 0;
+        if (selectAll) selectAll.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+    }
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+            updateState();
+        });
+    }
+    checkboxes.forEach(function (cb) { cb.addEventListener('change', updateState); });
+    form.addEventListener('submit', function (e) {
+        var checkedCount = checkboxes.filter(function (cb) { return cb.checked; }).length;
+        if (checkedCount === 0) {
+            alert('\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u6761\u8bb0\u5f55');
+            e.preventDefault();
+            return;
+        }
+        if (!confirm('\u786e\u5b9a\u5220\u9664\u9009\u4e2d\u7684 ' + checkedCount + ' \u6761\u8bb0\u5f55\u5417\uff1f\u6b64\u64cd\u4f5c\u4e0d\u53ef\u6062\u590d\u3002')) {
+            e.preventDefault();
+        }
+    });
+    updateState();
+})();
+</script>
 </body>
 </html>

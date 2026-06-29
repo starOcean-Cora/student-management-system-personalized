@@ -6,7 +6,10 @@ import com.example.student.entity.StudentInfo;
 import com.example.student.repository.CourseInfoRepository;
 import com.example.student.repository.GradeInfoRepository;
 import com.example.student.repository.StudentInfoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import java.util.List;
@@ -39,12 +42,41 @@ public class GradeService {
         return gradeRepository.findByStudentIdOrderByScoreDesc(studentId);
     }
 
+    public Page<GradeInfo> findAdminPage(String courseName, String examType, Pageable pageable) {
+        return gradeRepository.findAdminPage(courseName, examType, pageable);
+    }
+
+    public Page<GradeInfo> findStudentPage(Long studentId, String courseName, String examType, Pageable pageable) {
+        return gradeRepository.findStudentPage(studentId, courseName, examType, pageable);
+    }
+
     public GradeInfo save(GradeInfo grade) {
         return gradeRepository.save(grade);
     }
 
     public void deleteById(Long id) {
         gradeRepository.deleteById(id);
+    }
+
+    @Transactional
+    public int batchDeleteByIds(List<Long> ids) {
+        if (ids == null) {
+            return 0;
+        }
+        List<Long> uniqueIds = new ArrayList<>(new LinkedHashSet<>(ids));
+        uniqueIds.removeIf(id -> id == null);
+        if (uniqueIds.isEmpty()) {
+            return 0;
+        }
+        for (Long id : uniqueIds) {
+            if (!gradeRepository.existsById(id)) {
+                throw new IllegalArgumentException("record not found: " + id);
+            }
+        }
+        for (Long id : uniqueIds) {
+            deleteById(id);
+        }
+        return uniqueIds.size();
     }
 
     public boolean isDuplicate(Long studentId, Long courseId, String examType) {
