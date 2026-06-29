@@ -2,6 +2,8 @@ package com.example.student.service;
 
 import com.example.student.entity.StudentInfo;
 import com.example.student.repository.StudentInfoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,11 @@ public class StudentService {
 
     public List<StudentInfo> findAll() {
         return studentInfoRepository.findAll();
+    }
+
+    public Page<StudentInfo> findAdminPage(String name, Long classId, Pageable pageable) {
+        String keyword = name == null ? "" : name.trim();
+        return studentInfoRepository.findAdminPage(keyword, classId, pageable);
     }
 
     public Optional<StudentInfo> findById(Long id) {

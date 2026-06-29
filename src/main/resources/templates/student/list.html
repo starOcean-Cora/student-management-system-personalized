@@ -29,12 +29,25 @@
         .btn-danger:hover { background: #c0392b; }
         .btn-success { background: #27ae60; color: #fff; }
         .btn-success:hover { background: #219a52; }
-        .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
+        .table-card { background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .filter-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-form input, .filter-form select { height: 34px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .filter-form input { width: 180px; }
+        .filter-form select { width: 180px; }
+        .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
         th { background: #fafbfc; font-weight: 600; color: #555; }
         tr:hover { background: #f8f9fa; }
         .actions { display: flex; gap: 6px; }
+        .empty { text-align: center; color: #999; padding: 24px 0; }
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 16px; font-size: 13px; color: #555; flex-wrap: wrap; }
+        .page-btn { min-width: 30px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; color: #2c3e50; text-decoration: none; background: #fff; text-align: center; }
+        .page-btn:hover { background: #f5f6fa; }
+        .page-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+        .page-btn.disabled { color: #aaa; background: #f5f5f5; cursor: not-allowed; }
+        .btn-warning { background: #f39c12; color: #fff; }
+        .btn-warning:hover { background: #d68910; }
     </style>
 </head>
 <body>
@@ -66,30 +79,65 @@
         <div th:if="${message}" class="message" th:text="${message}"></div>
         <div th:if="${error}" class="error" th:text="${error}"></div>
         <div class="table-card">
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th><th>学号</th><th>姓名</th><th>性别</th><th>班级</th><th>手机号</th><th>邮箱</th><th>头像</th><th>状态</th><th>操作</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="s : ${students}">
-                    <td th:text="${s.id}"></td>
-                    <td th:text="${s.studentNo}"></td>
-                    <td th:text="${s.name}"></td>
-                    <td th:text="${s.gender} == 1 ? '男' : (${s.gender} == 0 ? '女' : '')"></td>
-                    <td th:text="${s.className}"></td>
-                    <td th:text="${s.phone}"></td>
-                    <td th:text="${s.email}"></td>
-                    <td th:text="${s.avatar}"></td>
-                    <td th:text="${s.status} == 1 ? '在读' : '离校'"></td>
-                    <td class="actions">
-                        <a th:href="@{/student/edit/{id}(id=${s.id})}" class="btn btn-primary">编辑</a>
-                        <a th:href="@{/student/delete/{id}(id=${s.id})}" class="btn btn-danger" onclick="return confirm('确认删除该学生吗？')">删除</a>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <form class="filter-form" th:action="@{/student}" method="get">
+                <input type="text" name="name" placeholder="请输入学生姓名" th:value="${name}">
+                <select name="classId">
+                    <option value="">全部班级</option>
+                    <option th:each="c : ${classes}"
+                            th:value="${c.id}"
+                            th:text="${c.className}"
+                            th:selected="${classId != null and classId == c.id}"></option>
+                </select>
+                <button type="submit" class="btn btn-success">查询</button>
+                <a th:href="@{/student}" class="btn btn-warning">清空条件</a>
+            </form>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th><th>学号</th><th>姓名</th><th>性别</th><th>班级</th><th>手机号</th><th>邮箱</th><th>头像</th><th>状态</th><th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(students)}">
+                        <td colspan="10" class="empty">暂无学生数据</td>
+                    </tr>
+                    <tr th:each="s : ${students}">
+                        <td th:text="${s.id}"></td>
+                        <td th:text="${s.studentNo}"></td>
+                        <td th:text="${s.name}"></td>
+                        <td th:text="${s.gender} == 1 ? '男' : (${s.gender} == 0 ? '女' : '')"></td>
+                        <td th:text="${s.className}"></td>
+                        <td th:text="${s.phone}"></td>
+                        <td th:text="${s.email}"></td>
+                        <td th:text="${s.avatar}"></td>
+                        <td th:text="${s.status} == 1 ? '在读' : '离校'"></td>
+                        <td class="actions">
+                            <a th:href="@{/student/edit/{id}(id=${s.id})}" class="btn btn-primary">编辑</a>
+                            <a th:href="@{/student/delete/{id}(id=${s.id})}" class="btn btn-danger" onclick="return confirm('确认删除该学生吗？')">删除</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <span th:text="'共 ' + ${totalElements} + ' 条'">共 0 条</span>
+                <span th:if="${currentPage <= 1}" class="page-btn disabled">上一页</span>
+                <a th:if="${currentPage > 1}"
+                   th:href="@{/student(page=${currentPage - 1}, name=${name}, classId=${classId})}"
+                   class="page-btn">上一页</a>
+                <span th:if="${totalPages == 0}" class="page-btn active">1</span>
+                <a th:if="${totalPages > 0}"
+                   th:each="p : ${pageNumbers}"
+                   th:href="@{/student(page=${p}, name=${name}, classId=${classId})}"
+                   th:text="${p}"
+                   th:class="${p == currentPage ? 'page-btn active' : 'page-btn'}"></a>
+                <span th:if="${currentPage >= totalPages}" class="page-btn disabled">下一页</span>
+                <a th:if="${currentPage < totalPages}"
+                   th:href="@{/student(page=${currentPage + 1}, name=${name}, classId=${classId})}"
+                   class="page-btn">下一页</a>
+                <span th:text="'第 ' + ${currentPage} + ' / ' + ${totalPages == 0 ? 1 : totalPages} + ' 页'">第 1 / 1 页</span>
+            </div>
         </div>
     </div>
 </div>

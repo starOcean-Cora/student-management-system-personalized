@@ -1,31 +1,76 @@
 package com.example.student.controller;
 
 import com.example.student.entity.StudentInfo;
+import com.example.student.service.ClassService;
 import com.example.student.service.StudentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/student")
 public class StudentController {
 
     private final StudentService studentService;
+    private final ClassService classService;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(StudentService studentService,
+                             ClassService classService) {
         this.studentService = studentService;
+        this.classService = classService;
     }
 
     @GetMapping
-    public String list(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String list(@RequestParam(required = false) String name,
+                       @RequestParam(required = false) Long classId,
+                       @RequestParam(defaultValue = "1") Integer page,
+                       HttpSession session,
+                       Model model,
+                       RedirectAttributes redirectAttributes) {
         String role = (String) session.getAttribute("role");
         if ("STUDENT".equals(role)) {
             return "redirect:/student/profile";
         }
-        model.addAttribute("students", studentService.findAll());
+        if (!"ADMIN".equals(role)) {
+            redirectAttributes.addFlashAttribute("error", "没有权限执行此操作");
+            return "redirect:/";
+        }
+        String keyword = name == null ? "" : name.trim();
+        int pageNumber = page == null || page < 1 ? 1 : page;
+        Page<StudentInfo> studentPage = studentService.findAdminPage(
+                keyword,
+                classId,
+                PageRequest.of(pageNumber - 1, 10, Sort.by(Sort.Direction.ASC, "id"))
+        );
+        if (studentPage.getTotalPages() > 0 && pageNumber > studentPage.getTotalPages()) {
+            pageNumber = studentPage.getTotalPages();
+            studentPage = studentService.findAdminPage(
+                    keyword,
+                    classId,
+                    PageRequest.of(pageNumber - 1, 10, Sort.by(Sort.Direction.ASC, "id"))
+            );
+        }
+        model.addAttribute("students", studentPage.getContent());
+        model.addAttribute("studentPage", studentPage);
+        model.addAttribute("name", keyword);
+        model.addAttribute("classId", classId);
+        model.addAttribute("classes", classService.findAll());
+        model.addAttribute("currentPage", pageNumber);
+        model.addAttribute("totalPages", studentPage.getTotalPages());
+        model.addAttribute("totalElements", studentPage.getTotalElements());
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int i = 1; i <= studentPage.getTotalPages(); i++) {
+            pageNumbers.add(i);
+        }
+        model.addAttribute("pageNumbers", pageNumbers);
         return "student/list";
     }
 
